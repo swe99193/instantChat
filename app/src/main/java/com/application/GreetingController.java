@@ -8,6 +8,8 @@ import org.springframework.web.util.HtmlUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import java.security.Principal;
+
 
 @Controller
 public class GreetingController {
@@ -25,13 +27,14 @@ public class GreetingController {
 
 // private message
 	@MessageMapping("/private-message")
-	public void privateMessage(HelloMessage message) throws Exception {
+	public void privateMessage(HelloMessage message, Principal principal) throws Exception {
 		System.out.println("/private-message HIT ...");
+		System.out.println(principal.getName());	// get sender name
 
 //		Thread.sleep(1000); // simulated delay
 		Greeting greetingMessage = new Greeting("(private) Hello, (dummy name) !");
-		messagingTemplate.convertAndSendToUser("usernameABC", "/queue/private", greetingMessage);
-
+		messagingTemplate.convertAndSendToUser("userABC", "/queue/private", greetingMessage);
+		// send to /user/{username}/queue/private
 	}
 
 }
