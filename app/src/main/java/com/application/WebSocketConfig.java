@@ -30,6 +30,9 @@ import org.springframework.session.Session;
 //
 //}
 
+// spring session and websocket integration
+// ref: https://docs.spring.io/spring-session/reference/guides/boot-websocket.html
+
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<Session>  {

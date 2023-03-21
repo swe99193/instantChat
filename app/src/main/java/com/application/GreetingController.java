@@ -28,11 +28,11 @@ public class GreetingController {
 // private message
 	@MessageMapping("/private-message")
 	public void privateMessage(HelloMessage message, Principal principal) throws Exception {
-		System.out.println("/private-message HIT ...");
-		System.out.println(principal.getName());	// get sender name
+		System.out.println("HIT api: /private-message");
+		System.out.println("session user: " + principal.getName());	// get sender name
 
 //		Thread.sleep(1000); // simulated delay
-		Greeting greetingMessage = new Greeting("(private) Hello, (dummy name) !");
+		Greeting greetingMessage = new Greeting(String.format("(private) From: %s: Hello, (dummy name) !", principal.getName()));
 		messagingTemplate.convertAndSendToUser("userABC", "/queue/private", greetingMessage);
 		// send to /user/{username}/queue/private
 	}
