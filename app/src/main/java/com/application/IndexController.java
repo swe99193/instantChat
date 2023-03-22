@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.security.Principal;
+
 @Controller
 public class IndexController {
     @GetMapping("/")
@@ -19,11 +21,13 @@ public class IndexController {
     ref: https://spring.io/guides/gs/handling-form-submission/
 */
     @PostMapping("/chat")
-    public String chat(@ModelAttribute ChatRequestModel chatRequestModel, Model model) {
+    public String chat(@ModelAttribute ChatRequestModel chatRequestModel, Model model, Principal principal) {
         System.out.println("HIT api: /chat");
-        System.out.println("chat with (username): " + chatRequestModel.getUsername());
+        System.out.println("session user: " + principal.getName());	// get sender name
+        System.out.println("chat with (receiver): " + chatRequestModel.getReceiver());
 
-        model.addAttribute("username", "userABC");
+        model.addAttribute("sender", principal.getName());
+        model.addAttribute("receiver", chatRequestModel.getReceiver());
         return "chat";
     }
 }

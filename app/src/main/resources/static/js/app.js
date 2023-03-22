@@ -23,7 +23,7 @@ function connect() {
             showGreeting(JSON.parse(greeting.body).content);
         });
 
-        stompClient.subscribe(`/user/${username}/queue/private`, function (greeting) {
+        stompClient.subscribe(`/user/${sender}/${receiver}/queue/private`, function (greeting) {
         console.log(greeting);
         // triggered everytime a new message comes in
             showGreeting(JSON.parse(greeting.body).content);
@@ -41,7 +41,7 @@ function disconnect() {
 
 function sendName() {
 //    stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
-    stompClient.send("/app/private-message", {}, JSON.stringify({'name': $("#name").val()}));
+    stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({'name': $("#name").val()}));
 }
 
 function showGreeting(message) {

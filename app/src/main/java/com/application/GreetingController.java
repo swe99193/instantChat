@@ -1,5 +1,6 @@
 package com.application;
 
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -26,14 +27,15 @@ public class GreetingController {
 
 
 // private message
-	@MessageMapping("/private-message")
-	public void privateMessage(HelloMessage message, Principal principal) throws Exception {
+	@MessageMapping("/private-message/{receiver}")
+	public void privateMessage(@DestinationVariable String receiver, HelloMessage message, Principal principal) throws Exception {
 		System.out.println("HIT api: /private-message");
 		System.out.println("session user: " + principal.getName());	// get sender name
+		System.out.println("receiver: " + receiver);	// get sender name
 
 //		Thread.sleep(1000); // simulated delay
 		Greeting greetingMessage = new Greeting(String.format("(private) From: %s: Hello, (dummy name) !", principal.getName()));
-		messagingTemplate.convertAndSendToUser("userABC", "/queue/private", greetingMessage);
+		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
 		// send to /user/{username}/queue/private
 	}
 

@@ -1,13 +1,13 @@
 package com.application;
 
 public class ChatRequestModel {
-    private String username;
+    private String receiver;
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
     }
 
-    public String getUsername() {
-        return username;
+    public String getReceiver() {
+        return receiver;
     }
 }
