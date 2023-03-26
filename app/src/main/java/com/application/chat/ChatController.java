@@ -1,4 +1,4 @@
-package com.application;
+package com.application.chat;
 
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -13,31 +13,33 @@ import java.security.Principal;
 
 
 @Controller
-public class GreetingController {
+public class ChatController {
 
 	@Autowired private SimpMessagingTemplate messagingTemplate;
 
 	// broadcast message
 	@MessageMapping("/hello")
 	@SendTo("/topic/greetings")
-	public Greeting greeting(HelloMessage message) throws Exception {
+	public ChatMessage greeting(HelloMessage message) throws Exception {
 //		Thread.sleep(1000); // simulated delay
-		return new Greeting("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
+		return new ChatMessage("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
 	}
 
 
 // private message
 	@MessageMapping("/private-message/{receiver}")
-	public void privateMessage(@DestinationVariable String receiver, HelloMessage message, Principal principal) throws Exception {
+	public void privateMessage(@DestinationVariable String receiver, ChatMessage message, Principal principal) throws Exception {
 		System.out.println("HIT api: /private-message");
 		System.out.println("session user: " + principal.getName());	// get sender name
 		System.out.println("receiver: " + receiver);	// get sender name
 
 //		Thread.sleep(1000); // simulated delay
-		Greeting greetingMessage = new Greeting(String.format("(private) From: %s: Hello, (dummy name) !", principal.getName()));
+		ChatMessage chatMessage = new ChatMessage(String.format("(private) From: %s: %s", principal.getName(), message.getContent()));
+
 //		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
 //		messagingTemplate.convertAndSendToUser(receiver, principal.getName() + "/queue/private", greetingMessage);
-		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), greetingMessage);
+		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage);
+		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
 
 		// send to /user/{username}/queue/private
 	}
