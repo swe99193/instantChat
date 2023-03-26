@@ -16,10 +16,10 @@ public class IndexController {
         return "index";
     }
 
-/*
-    map html form to java class (model)
-    ref: https://spring.io/guides/gs/handling-form-submission/
-*/
+    /**
+     *  map html form to java class (model)
+     *  ref: https://spring.io/guides/gs/handling-form-submission/
+     */
     @PostMapping("/chat")
     public String chat(@ModelAttribute ChatRequestModel chatRequestModel, Model model, Principal principal) {
         System.out.println("HIT api: /chat");
