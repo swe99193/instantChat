@@ -10,6 +10,8 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.session.web.socket.config.annotation.AbstractSessionWebSocketMessageBrokerConfigurer;
 import org.springframework.session.Session;
 
+// simple websocket conifguration
+
 //@Configuration
 //@EnableWebSocketMessageBroker
 //public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
@@ -33,15 +35,17 @@ import org.springframework.session.Session;
 // spring session and websocket integration
 // ref: https://docs.spring.io/spring-session/reference/guides/boot-websocket.html
 
+// good explanation of each configuration step:
+// ref: https://manhtai.github.io/posts/spring-websocket-server/
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<Session>  {
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.enableSimpleBroker("/topic", "/user");
-		// /topic: hello message
-		// /user: private message
+		// Note: don't add "/user" into simple broker
+		config.enableSimpleBroker("/topic", "/queue");
+
 		config.setApplicationDestinationPrefixes("/app");
 		config.setUserDestinationPrefix("/user");
 	}

@@ -23,7 +23,8 @@ function connect() {
             showGreeting(JSON.parse(greeting.body).content);
         });
 
-        stompClient.subscribe(`/user/${sender}/${receiver}/queue/private`, function (greeting) {
+        // stompClient.subscribe(`/user/${sender}/${receiver}/queue/private`, function (greeting) {
+        stompClient.subscribe(`/user/queue/private.${receiver}`, function (greeting) {
         console.log(greeting);
         // triggered everytime a new message comes in
             showGreeting(JSON.parse(greeting.body).content);

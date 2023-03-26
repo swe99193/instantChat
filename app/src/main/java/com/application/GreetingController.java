@@ -35,7 +35,10 @@ public class GreetingController {
 
 //		Thread.sleep(1000); // simulated delay
 		Greeting greetingMessage = new Greeting(String.format("(private) From: %s: Hello, (dummy name) !", principal.getName()));
-		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
+//		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
+//		messagingTemplate.convertAndSendToUser(receiver, principal.getName() + "/queue/private", greetingMessage);
+		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), greetingMessage);
+
 		// send to /user/{username}/queue/private
 	}
 
