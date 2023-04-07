@@ -16,6 +16,8 @@ import java.security.Principal;
 public class ChatController {
 
 	@Autowired private SimpMessagingTemplate messagingTemplate;
+	@Autowired
+	private ChatService chatService;
 
 	// broadcast message
 	@MessageMapping("/hello")
