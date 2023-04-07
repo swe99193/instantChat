@@ -26,7 +26,10 @@ dependencies {
 
 	compileOnly 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.projectlombok:lombok'
-	
+
+
+	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.11.64'
+	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
 
 	implementation 'org.webjars:webjars-locator-core:0.52'
 	implementation 'org.webjars:sockjs-client:1.0.2'

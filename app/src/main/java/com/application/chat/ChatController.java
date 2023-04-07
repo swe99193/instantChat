@@ -44,6 +44,8 @@ public class ChatController {
 		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
 
 		// send to /user/{username}/queue/private
+		chatService.saveMessage(principal.getName(), receiver, message.getContent());
+
 	}
 
 }
