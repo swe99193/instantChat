@@ -28,18 +28,14 @@ public class MessageService {
     /**
     * query the database based on the partition key "channel id"
     * */
-    public void listMessage(String channel_id){
+    public List<Message> listMessage(String channel_id){
         DynamoDBMapper mapper = new DynamoDBMapper(client);
         Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
         eav.put(":val1", new AttributeValue().withS(channel_id));
         DynamoDBQueryExpression<Message> queryExpression = new DynamoDBQueryExpression<Message>().withKeyConditionExpression("channel_id = :val1")
                 .withExpressionAttributeValues(eav);
 
-        // Note: mapper.query with pagination
-        List<Message> messageList = mapper.query(Message.class, queryExpression);
-        for (Message message: messageList) {
-            System.out.printf("channel_id: %s, timestamp: %d, sender: %s, receiver: %s, contentType: %s, content: %s\n"
-                    , message.getChannel_id(), message.getTimestamp(), message.getSender(), message.getReceiver(), message.getContentType(), message.getContent());
-        }
+        // Note: mapper.query has support for pagination
+        return mapper.query(Message.class, queryExpression);
     }
 }
