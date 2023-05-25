@@ -47,12 +47,14 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 		config.enableSimpleBroker("/topic", "/queue");
 
 		config.setApplicationDestinationPrefixes("/app");
+
+		// prefix of endpoint to receive "private" message (see setUserDestinationPrefix Documentation)
 		config.setUserDestinationPrefix("/user");
 	}
 
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/gs-guide-websocket").withSockJS();
+		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins("http://localhost:3000").withSockJS();
 	}
 
 }
