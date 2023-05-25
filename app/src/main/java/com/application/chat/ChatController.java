@@ -54,4 +54,13 @@ public class ChatController {
 
 	}
 
+	@GetMapping("/list-message")
+	public List<Message> listMessage(@RequestParam String receiver, Principal principal){
+		String channel_id = channelMappingService.findChannelId(principal.getName(), receiver);
+
+		List<Message> messageList = messageService.listMessage(channel_id);
+		return messageList;
+//		return new ArrayList<Message>(); // test: empty list
+	}
+
 }
