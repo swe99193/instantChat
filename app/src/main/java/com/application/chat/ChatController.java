@@ -1,32 +1,35 @@
 package com.application.chat;
 
+import com.application.channel_mapping.ChannelMappingService;
+import com.application.message_storage.Message;
+import com.application.message_storage.MessageService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.HtmlUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 
-@Controller
+@RestController
 public class ChatController {
 
 	@Autowired private SimpMessagingTemplate messagingTemplate;
 	@Autowired
 	private ChatService chatService;
-
-	// broadcast message
-	@MessageMapping("/hello")
-	@SendTo("/topic/greetings")
-	public ChatMessage greeting(HelloMessage message) throws Exception {
-//		Thread.sleep(1000); // simulated delay
-		return new ChatMessage("Hello, " + HtmlUtils.htmlEscape(message.getName()) + "!");
-	}
-
+	@Autowired
+	private MessageService messageService;
+	@Autowired
+	private ChannelMappingService channelMappingService;
 
 // private message
 	@MessageMapping("/private-message/{receiver}")
@@ -35,15 +38,18 @@ public class ChatController {
 		System.out.println("session user: " + principal.getName());	// get sender name
 		System.out.println("receiver: " + receiver);	// get sender name
 
-//		Thread.sleep(1000); // simulated delay
-		ChatMessage chatMessage = new ChatMessage(String.format("(private) From: %s: %s", principal.getName(), message.getContent()));
+		ChatMessage chatMessage = new ChatMessage(String.format("%s: %s", principal.getName(), message.getContent()));
 
+		// not working
 //		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
 //		messagingTemplate.convertAndSendToUser(receiver, principal.getName() + "/queue/private", greetingMessage);
-		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage);
-		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
 
-		// send to /user/{username}/queue/private
+		// Note: send to /user/{receiver}/queue/private.{sender}
+		// send to receiver
+		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage);
+		// send to sender
+		//		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
+
 		chatService.saveMessage(principal.getName(), receiver, message.getContent());
 
 	}
