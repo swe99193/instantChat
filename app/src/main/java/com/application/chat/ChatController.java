@@ -17,7 +17,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -46,7 +48,9 @@ public class ChatController {
 
 		// Note: send to /user/{receiver}/queue/private.{sender}
 		// send to receiver
-		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage);
+		Map<String, Object> headers = new HashMap<>();
+		headers.put("auto-delete", "true");
+		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage, headers);
 		// send to sender
 		//		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
 
