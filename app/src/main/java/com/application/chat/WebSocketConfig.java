@@ -44,7 +44,8 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		// Note: don't add "/user" into simple broker
-		config.enableSimpleBroker("/topic", "/queue");
+		config.enableStompBrokerRelay("/topic", "/queue").setRelayHost("localhost")
+				.setRelayPort(61613).setClientLogin("guest").setClientPasscode("guest");
 
 		config.setApplicationDestinationPrefixes("/app");
 
