@@ -74,7 +74,7 @@ function ChatRoom({ stompClient, receiver}: props) {
           stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
               console.log(message);
               handleReceive(JSON.parse(message.body).content);
-          });
+          }, { "auto-delete": true });
 
           listMessage();
       });
