@@ -1,5 +1,6 @@
 package com.application.chat;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -41,11 +42,26 @@ import org.springframework.session.Session;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<Session>  {
 
+	@Value("${frontend.url}")
+	private String frontendUrl;
+
+	@Value("${rabbitmq.host}")
+	private String rabbitmqHost;
+
+	@Value("${rabbitmq.port}")
+	private int rabbitmqPort;
+
+	@Value("${rabbitmq.username}")
+	private String rabbitmqUsername;
+
+	@Value("${rabbitmq.password}")
+	private String rabbitmqPassword;
+
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		// Note: don't add "/user" into simple broker
-		config.enableStompBrokerRelay("/topic", "/queue").setRelayHost("localhost")
-				.setRelayPort(61613).setClientLogin("guest").setClientPasscode("guest");
+		config.enableStompBrokerRelay("/topic", "/queue").setRelayHost(rabbitmqHost)
+				.setRelayPort(rabbitmqPort).setClientLogin(rabbitmqUsername).setClientPasscode(rabbitmqPassword);
 
 		config.setApplicationDestinationPrefixes("/app");
 
@@ -55,7 +71,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins("http://localhost:3000").withSockJS();
+		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins(frontendUrl).withSockJS();
 	}
 
 }
