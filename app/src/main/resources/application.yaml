@@ -1,0 +1,15 @@
+spring:
+    datasource:
+        username: postgres
+        password: postgres
+        url: jdbc:postgresql://localhost:8050/InstantChat
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+amazon:
+    aws:
+        accesskey: ${AWS_ACCESS_KEY}
+        secretkey: ${AWS_SECRET_KEY}
+    dynamodb:
+        endpoint: ${DYNAMODB_URL}
