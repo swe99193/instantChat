@@ -60,8 +60,13 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		// Note: don't add "/user" into simple broker
-		config.enableStompBrokerRelay("/topic", "/queue").setRelayHost(rabbitmqHost)
-				.setRelayPort(rabbitmqPort).setClientLogin(rabbitmqUsername).setClientPasscode(rabbitmqPassword);
+		config.enableStompBrokerRelay("/topic", "/queue")
+				.setUserDestinationBroadcast("/topic/log-unresolved-user")
+				.setUserRegistryBroadcast("/topic/log-user-registry")
+				.setRelayHost(rabbitmqHost)
+				.setRelayPort(rabbitmqPort)
+				.setClientLogin(rabbitmqUsername)
+				.setClientPasscode(rabbitmqPassword);
 
 		config.setApplicationDestinationPrefixes("/app");
 
