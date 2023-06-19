@@ -13,6 +13,9 @@ import {
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+
 interface props{
     stompClient: Stomp.Client,
     receiver: string
@@ -47,7 +50,7 @@ function ChatRoom({ stompClient, receiver}: props) {
 
       const listMessage = async () => {
 
-        const response = await fetch(`http://localhost:8080/list-message?receiver=${receiver}`, { credentials: "include" });
+        const response = await fetch(`${BACKEND_URL}/list-message?receiver=${receiver}`, { credentials: "include" });
         // const response = await fetch(`http://localhost:8080/what`, { credentials: "include" });
 
         let messageList = await response.json();

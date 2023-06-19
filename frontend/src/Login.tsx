@@ -3,6 +3,9 @@ import ReactDOM from "react-dom";
 
 import "./Login.css";
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+
 function Login() {
   const [errorMessages, setErrorMessages] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -18,7 +21,7 @@ function Login() {
     formData.append('username', (document.getElementById("username") as HTMLInputElement).value);
     formData.append('password', (document.getElementById("password") as HTMLInputElement).value);
 
-    const res = await fetch("http://localhost:8080/login", {
+    const res = await fetch(`${BACKEND_URL}/login`, {
         method: "POST", 
         body: formData,
         credentials: "include"  // set cookie (session)
@@ -31,7 +34,7 @@ function Login() {
       localStorage.setItem("login_expiration", String(Date.now()/1000 + 2*60*60)); // unit: sec
 
       await new Promise(r => setTimeout(r, 2000));
-      window.location.replace('http://localhost:3000');  // redirect to main page
+      window.location.replace(`${FRONTEND_URL}`);  // redirect to main page
 
     } else {
       // Invalid username & password, or other errors

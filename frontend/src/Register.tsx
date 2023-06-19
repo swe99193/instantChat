@@ -4,6 +4,9 @@ import { redirect } from "react-router-dom";
 
 import "./Register.css";
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+
 function Register() {
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -13,13 +16,13 @@ function Register() {
         formData.append('username', (document.getElementById("username") as HTMLInputElement).value);
         formData.append('password', (document.getElementById("password") as HTMLInputElement).value);
     
-        const res = await fetch("http://localhost:8080/register", {
+        const res = await fetch(`${BACKEND_URL}/register`, {
             method: "POST", 
             body: formData
         });
 
         alert("Register an account successful");
-        window.location.replace('http://localhost:3000/login'); // redirect
+        window.location.replace(`${FRONTEND_URL}/login`); // redirect
 
     }
 
