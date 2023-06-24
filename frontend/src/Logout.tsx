@@ -6,6 +6,7 @@ const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 
 function Logout() {
     localStorage.removeItem("login_expiration");
+    localStorage.removeItem("username");
 
     window.location.replace(`${BACKEND_URL}/logout`); // call logout at backend
     window.location.replace(`${FRONTEND_URL}/login`); // redirect to login page

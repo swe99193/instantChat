@@ -32,6 +32,7 @@ function Login() {
       setUsername((document.getElementById("username") as HTMLInputElement).value)
       setIsSubmitted(true);
       localStorage.setItem("login_expiration", String(Date.now()/1000 + 2*60*60)); // unit: sec
+      localStorage.setItem("username", (document.getElementById("username") as HTMLInputElement).value);
 
       await new Promise(r => setTimeout(r, 2000));
       window.location.replace(`${FRONTEND_URL}`);  // redirect to main page
