@@ -1,0 +1,40 @@
+spring:
+    datasource:
+        username: xxx
+        password: xxx   # AWS RDS
+        url: jdbc:postgresql://<url>:<port>/InstantChat   # AWS RDS
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: <url> # AWS ElastiCache
+            port: 6379
+server:
+    servlet:
+        session:
+            timeout: 360000  # session timeout, 100 hrs
+
+amazon:
+    aws:
+        accesskey: None
+        secretkey: None
+    dynamodb:
+        endpoint: None
+
+rabbitmq:   # AWS (switch to ActiveMQ)
+    host: <url>
+    port: 61614
+    username: xxx
+    password: xxx
+
+frontend:
+    url: <url>

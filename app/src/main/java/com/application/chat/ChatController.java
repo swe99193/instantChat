@@ -40,7 +40,7 @@ public class ChatController {
 		System.out.println("session user: " + principal.getName());	// get sender name
 		System.out.println("receiver: " + receiver);	// get sender name
 
-		ChatMessage chatMessage = new ChatMessage(String.format("%s: %s", principal.getName(), message.getContent()));
+		ChatMessage chatMessage = new ChatMessage(String.format("%s", message.getContent()));
 
 		// not working
 //		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
@@ -52,7 +52,7 @@ public class ChatController {
 		headers.put("auto-delete", "true");
 		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage, headers);
 		// send to sender
-		//		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
+		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver + "-" + principal.getName(), chatMessage, headers);
 
 		chatService.saveMessage(principal.getName(), receiver, message.getContent());
 

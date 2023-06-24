@@ -7,6 +7,22 @@ spring:
         hibernate:
             ddl-auto: update
 
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: localhost # local
+            port: 6379
+server:
+    servlet:
+        session:
+            timeout: 360000  # session timeout, 100 hrs
+
 amazon:
     aws:
         accesskey: ${AWS_ACCESS_KEY}

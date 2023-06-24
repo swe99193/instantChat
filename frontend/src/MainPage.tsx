@@ -1,6 +1,8 @@
 import { FormEventHandler } from "react";
 import { Form, useNavigate } from "react-router-dom";
 
+import "./MainPage.css";
+
 interface props{
     receiver: string
 }
@@ -17,13 +19,16 @@ function MainPage() {
     }
 
     return(
+        
         <div className="container">
+
             <div className="wrapper">
                 <div className="title"><span>Welcome to InstantChat!</span></div>
+
                 <form onSubmit={handleSubmit} method="post">
                     <div className="row">
-                        <i className="fas fa-comment"></i>
-                        <input type="text" placeholder="Username" id="receiver" name="receiver" required/>
+                        <i className="fa fa-comment faa-float animated"></i>
+                        <input type="text" placeholder="Chat with someone..." id="receiver" name="receiver" required/>
                     </div>
                     <div className="row button">
                         <input type="submit" value="Start Chat"/>
