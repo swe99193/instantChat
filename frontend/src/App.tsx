@@ -19,8 +19,7 @@ function App() {
   return(
     <BrowserRouter>
       <Routes>
-        <Route path="/" >
-          <Route index element={loggedin ? <MainPage/>: <Navigate to="/login"/>}/>
+          <Route path="/" element={loggedin ? <MainPage/>: <Navigate to="/login"/>}/>
           {/* <Route path='/login' Component={() => {
                 window.location.replace('http://localhost:8080/login');   // backend login page
                 return null;
@@ -28,7 +27,7 @@ function App() {
           <Route path='/login' element={loggedin ? <Navigate to="/"/>: <Login/>}/>
           <Route path='/logout' element={<Logout/>}/>
           <Route path='/register' element={<Register/>}/>
-        </Route>
+
         <Route path="/chat" >
           <Route index element={loggedin ? <ChatLayout/>: <Navigate to="/login"/>}/>
         </Route>
