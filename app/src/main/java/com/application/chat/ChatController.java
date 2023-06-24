@@ -52,7 +52,7 @@ public class ChatController {
 		headers.put("auto-delete", "true");
 		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage, headers);
 		// send to sender
-		//		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver, chatMessage);
+		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver + "-" + principal.getName(), chatMessage, headers);
 
 		chatService.saveMessage(principal.getName(), receiver, message.getContent());
 
