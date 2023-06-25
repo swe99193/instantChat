@@ -17,8 +17,12 @@ import java.util.Map;
 @Service
 public class MessageService {
 
+    private final AmazonDynamoDB client;
+
     @Autowired
-    private AmazonDynamoDB client;
+    public MessageService(AmazonDynamoDB client) {
+        this.client = client;
+    }
 
     public void saveMessage(Message message) {
         DynamoDBMapper mapper = new DynamoDBMapper(client);

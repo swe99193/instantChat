@@ -6,12 +6,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RegisterService {
-    @Autowired
     private final UserRepository userRepository;
-
-    @Autowired
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    @Autowired
     public RegisterService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;

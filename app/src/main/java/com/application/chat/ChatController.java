@@ -3,20 +3,16 @@ package com.application.chat;
 import com.application.channel_mapping.ChannelMappingService;
 import com.application.message_storage.Message;
 import com.application.message_storage.MessageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.HtmlUtils;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +21,21 @@ import java.util.Map;
 @RestController
 public class ChatController {
 
-	@Autowired private SimpMessagingTemplate messagingTemplate;
-	@Autowired
-	private ChatService chatService;
-	@Autowired
-	private MessageService messageService;
-	@Autowired
-	private ChannelMappingService channelMappingService;
+	private final SimpMessagingTemplate messagingTemplate;
+	private final ChatService chatService;
+	private final MessageService messageService;
+	private final ChannelMappingService channelMappingService;
 
-// private message
+	@Autowired
+	public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService, MessageService messageService, ChannelMappingService channelMappingService) {
+		this.messagingTemplate = messagingTemplate;
+		this.chatService = chatService;
+		this.messageService = messageService;
+		this.channelMappingService = channelMappingService;
+	}
+
+
+	// private message
 	@MessageMapping("/private-message/{receiver}")
 	public void privateMessage(@DestinationVariable String receiver, ChatMessage message, Principal principal) throws Exception {
 		System.out.println("HIT api: /private-message");

@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/register")
 public class RegisterController {
-    @Autowired
     private final RegisterService registerService;
 
+    @Autowired
     public RegisterController(RegisterService registerService) {
         this.registerService = registerService;
     }

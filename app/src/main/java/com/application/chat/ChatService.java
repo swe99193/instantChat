@@ -7,16 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 
 @Service
 public class ChatService {
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
+    private final ChannelMappingService channelMappingService;
 
     @Autowired
-    private ChannelMappingService channelMappingService;
+    public ChatService(MessageService messageService, ChannelMappingService channelMappingService) {
+        this.messageService = messageService;
+        this.channelMappingService = channelMappingService;
+    }
 
     public void saveMessage(String sender, String receiver, String content){
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());

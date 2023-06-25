@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChannelMappingService {
 
-    @Autowired
     private final ChannelMappingRepository channelMappingRepository;
 
+    @Autowired
     public ChannelMappingService(ChannelMappingRepository channelMappingRepository) {
         this.channelMappingRepository = channelMappingRepository;
     }

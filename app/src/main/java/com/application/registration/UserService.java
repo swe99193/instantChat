@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 // Note: UserDetailsService is a magic behind spring security
 @Service
 public class UserService implements UserDetailsService{
-    @Autowired
     private final UserRepository userRepository;
 
+    @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
