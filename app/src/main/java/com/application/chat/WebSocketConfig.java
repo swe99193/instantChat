@@ -120,7 +120,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins(frontendUrl).withSockJS();
+		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins(frontendUrl);
 	}
 
 }
