@@ -52,6 +52,7 @@ public class ChatController {
 		// send to receiver
 		Map<String, Object> headers = new HashMap<>();
 		headers.put("auto-delete", "true");
+		headers.put("expires", System.currentTimeMillis() + 700);	// set expire time, adjust based on the latency of MQ
 		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage, headers);
 		// send to sender
 		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver + "-" + principal.getName(), chatMessage, headers);
