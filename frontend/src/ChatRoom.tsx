@@ -3,7 +3,6 @@ import logo from './logo.svg';
 
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
-  MainContainer,
   ChatContainer,
   MessageList,
   Message,
@@ -12,7 +11,6 @@ import {
   Avatar,
   ConversationHeader,
 } from "@chatscope/chat-ui-kit-react";
-import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -23,10 +21,10 @@ interface props{
     receiver: string
 }
 
-function ChatRoom({ stompClient, receiver}: props) {
+function ChatRoom({ stompClient, receiver }: props) {
     const [msgInputValue, setMsgInputValue] = useState("");
     const [messages, setMessages] = useState<MessageModel[]>([]);
-
+    const [inputDisabled, setInputDisabled] = useState(true);
 
     const handleSend = (message: string) => {
         // setMessages(messages => [...messages, {
@@ -70,7 +68,7 @@ function ChatRoom({ stompClient, receiver}: props) {
         // console.log(messageList);
 
         setMessages(messages =>{
-            let arr = (messageList.map((message: { content: string; sender: string; timestamp: number})=>{
+            let arr = messageList.map((message: { content: string; sender: string; timestamp: number})=>{
                 return {
                     message: message.content,
                     sentTime: new Date(message.timestamp).toLocaleString('zh-Hans-CN').slice(0,-3),
@@ -78,37 +76,45 @@ function ChatRoom({ stompClient, receiver}: props) {
                     direction: (message.sender == receiver) ? "incoming" : "outgoing",
                     position: "single"
                 };
-            }) as unknown) as MessageModel;
-            return messages.concat(arr);
+            });
+            return arr;   // overwrite "messages"
         });
+
+        setInputDisabled(false);  // allow input
       };
 
       const returnMainPage = () => {
         window.location.assign(`${FRONTEND_URL}`); // redirect to main page, don't use "replace"
       }
     
+      const subscribeQueue = () => {
+        const receiveSub = stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
+          handleReceive(JSON.parse(message.body).content);
+        }, { "auto-delete": true });
+
+        const echoSub = stompClient.subscribe(`/user/queue/private.${receiver}-${localStorage.getItem("username")}`, function (message) {
+          handleSendEcho(JSON.parse(message.body).content);
+        }, { "auto-delete": true });
+
+        return { receiveSub, echoSub };
+      }
+
       useEffect(()=>{
+        setInputDisabled(true);  // disable input
+        setMessages([]);  // clear message
+        setMsgInputValue(""); // clear input bar
         listMessage();
+        const { receiveSub, echoSub } = subscribeQueue();
 
-        stompClient.connect({}, function (frame) {
-          console.log('Connected: ' + frame);
-          stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
-              // console.log(message);
-              handleReceive(JSON.parse(message.body).content);
-          }, { "auto-delete": true });
+        return function cleanup () {
+          // unsubscribe from queue
+          receiveSub.unsubscribe();
+          echoSub.unsubscribe();
+        }
 
-          stompClient.subscribe(`/user/queue/private.${receiver}-${localStorage.getItem("username")}`, function (message) {
-              // console.log(message);
-              handleSendEcho(JSON.parse(message.body).content);
-          }, { "auto-delete": true });
-        });
-
-      }, []);
-    
+      }, [receiver]); // re-render when receiver change
       
       return (
-        <div style={{ "height": "95vh" }}>
-          <MainContainer>
             <ChatContainer>       
               <ConversationHeader>
                 <ConversationHeader.Back onClick={returnMainPage}/>
@@ -127,10 +133,8 @@ function ChatRoom({ stompClient, receiver}: props) {
                 }
     
               </MessageList>
-              <MessageInput placeholder="Type message here" onSend={handleSend} onChange={setMsgInputValue} value={msgInputValue} />        
+              <MessageInput placeholder="Type message here" onSend={handleSend} onChange={setMsgInputValue} value={msgInputValue} disabled={inputDisabled}/>        
             </ChatContainer>
-          </MainContainer>
-        </div>
       );
 }
 
