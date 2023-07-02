@@ -1,9 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import ChatLayout from './ChatLayout';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import MainPage from './MainPage';
+import ChatLayout from './ChatLayout';
 import Login from './Login';
 import Logout from './Logout';
 import Register from './Register';
@@ -19,7 +18,7 @@ function App() {
   return(
     <BrowserRouter>
       <Routes>
-          <Route path="/" element={loggedin ? <MainPage/>: <Navigate to="/login"/>}/>
+          <Route path="/" element={loggedin ? <ChatLayout/>: <Navigate to="/login"/>}/>
           {/* <Route path='/login' Component={() => {
                 window.location.replace('http://localhost:8080/login');   // backend login page
                 return null;
@@ -27,10 +26,6 @@ function App() {
           <Route path='/login' element={loggedin ? <Navigate to="/"/>: <Login/>}/>
           <Route path='/logout' element={<Logout/>}/>
           <Route path='/register' element={<Register/>}/>
-
-        <Route path="/chat" >
-          <Route index element={loggedin ? <ChatLayout/>: <Navigate to="/login"/>}/>
-        </Route>
       </Routes>
     </BrowserRouter>
   );
