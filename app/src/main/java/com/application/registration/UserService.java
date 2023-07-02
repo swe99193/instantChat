@@ -24,4 +24,8 @@ public class UserService implements UserDetailsService{
         }
         return user;
     }
+    public boolean checkUserExist(String username){
+        User user = userRepository.findByUsername(username);
+        return user != null;
+    }
 }
