@@ -23,30 +23,28 @@ public class ChatController {
 
 	private final SimpMessagingTemplate messagingTemplate;
 	private final ChatService chatService;
-	private final MessageService messageService;
-	private final ChannelMappingService channelMappingService;
 
 	@Autowired
-	public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService, MessageService messageService, ChannelMappingService channelMappingService) {
+	public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService) {
 		this.messagingTemplate = messagingTemplate;
 		this.chatService = chatService;
-		this.messageService = messageService;
-		this.channelMappingService = channelMappingService;
 	}
 
 
 	// private message
 	@MessageMapping("/private-message/{receiver}")
 	public void privateMessage(@DestinationVariable String receiver, ChatMessage message, Principal principal) throws Exception {
-		System.out.println("HIT api: /private-message");
-		System.out.println("session user: " + principal.getName());	// get sender name
-		System.out.println("receiver: " + receiver);	// get sender name
+//		System.out.println("HIT api: /private-message");
+//		System.out.println("session user: " + principal.getName());	// get sender name
+//		System.out.println("receiver: " + receiver);	// get sender name
 
 		ChatMessage chatMessage = new ChatMessage(String.format("%s", message.getContent()));
 
 		// not working
 //		messagingTemplate.convertAndSendToUser(receiver + "/" + principal.getName(), "/queue/private", greetingMessage);
 //		messagingTemplate.convertAndSendToUser(receiver, principal.getName() + "/queue/private", greetingMessage);
+
+		chatService.saveMessage(principal.getName(), receiver, message.getContent());
 
 		// Note: send to /user/{receiver}/queue/private.{sender}
 		// send to receiver
@@ -56,17 +54,12 @@ public class ChatController {
 		messagingTemplate.convertAndSendToUser(receiver, "/queue/private." + principal.getName(), chatMessage, headers);
 		// send to sender
 		messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/private." + receiver + "-" + principal.getName(), chatMessage, headers);
-
-		chatService.saveMessage(principal.getName(), receiver, message.getContent());
-
 	}
 
 	@GetMapping("/list-message")
 	public List<Message> listMessage(@RequestParam String receiver, Principal principal){
-		String channel_id = channelMappingService.findChannelId(principal.getName(), receiver);
 
-		List<Message> messageList = messageService.listMessage(channel_id);
-		return messageList;
+		return chatService.listMessage(principal.getName(), receiver);
 //		return new ArrayList<Message>(); // test: empty list
 	}
 
