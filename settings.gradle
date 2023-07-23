@@ -1,0 +1,4 @@
+rootProject.name = 'InstantChat-backend'
+
+include "app"
+include "grpc-lib"
