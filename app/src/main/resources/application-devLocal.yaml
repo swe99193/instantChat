@@ -38,3 +38,14 @@ rabbitmq:
 
 frontend:
     url: http://localhost:3000
+
+grpc:
+    server:
+        port: 9090
+
+    client:
+        local-grpc-server: # gRPC server name
+            address: 'static://127.0.0.1:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext

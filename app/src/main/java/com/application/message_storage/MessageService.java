@@ -1,21 +1,27 @@
 package com.application.message_storage;
 
+import MessageServiceLib.*;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 // Dynamodb sdk ref:
 // https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-dynamodb-items.html
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.QueryScanExample.html
-@Service
-public class MessageService {
+
+@GrpcService // also include @Service
+public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
     private final AmazonDynamoDB client;
 
@@ -24,15 +30,28 @@ public class MessageService {
         this.client = client;
     }
 
-    public void saveMessage(Message message) {
+    @Override
+    public void saveMessage(SaveMessageRequest req, StreamObserver<SaveMessageReply> responseObserver) {
+        MessageServiceLib.Message m = req.getMessage();
+
+        // convert to Message class
+        Message message = new Message(m.getChannelId(), m.getTimestamp(),m.getSender(),m.getReceiver(), m.getContentType(), m.getContent());
+
         DynamoDBMapper mapper = new DynamoDBMapper(client);
         mapper.save(message);
+
+        SaveMessageReply reply = SaveMessageReply.newBuilder().setIsSuccess(true).build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 
     /**
     * query the database based on the partition key "channel id"
     * */
-    public List<Message> listMessage(String channel_id){
+    @Override
+    public void listMessage(ListMessageRequest req, StreamObserver<ListMessageReply> responseObserver){
+        String channel_id = req.getChannelId();
+
         DynamoDBMapper mapper = new DynamoDBMapper(client);
         Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
         eav.put(":val1", new AttributeValue().withS(channel_id));
@@ -40,6 +59,24 @@ public class MessageService {
                 .withExpressionAttributeValues(eav);
 
         // Note: mapper.query has support for pagination
-        return mapper.query(Message.class, queryExpression);
+        List<Message> messageList = mapper.query(Message.class, queryExpression);
+
+        // convert to gRPC Message class
+        List<MessageServiceLib.Message> mList = new ArrayList<MessageServiceLib.Message>();
+        for(Message message: messageList) {
+            MessageServiceLib.Message m = MessageServiceLib.Message.newBuilder()
+                    .setChannelId(message.getChannel_id())
+                    .setTimestamp(message.getTimestamp())
+                    .setSender(message.getSender())
+                    .setReceiver(message.getReceiver())
+                    .setContentType(message.getContentType())
+                    .setContent(message.getContent())
+                    .build();
+            mList.add(m);
+        }
+
+        ListMessageReply reply = ListMessageReply.newBuilder().addAllMessage(mList).build();
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
     }
 }

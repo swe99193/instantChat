@@ -1,8 +1,6 @@
 package com.application.chat;
 
-import com.application.channel_mapping.ChannelMappingService;
 import com.application.message_storage.Message;
-import com.application.message_storage.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
