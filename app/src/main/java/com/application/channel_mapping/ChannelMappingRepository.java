@@ -7,9 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.UUID;
 
 @Repository
-public interface ChannelMappingRepository extends JpaRepository<ChannelMapping, String> {
+public interface ChannelMappingRepository extends JpaRepository<ChannelMapping, UUID> {
 
 
     // how to use @Query: https://www.baeldung.com/spring-data-jpa-query
