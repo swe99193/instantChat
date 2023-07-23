@@ -8,5 +8,6 @@ public class MessagingStompWebsocketApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MessagingStompWebsocketApplication.class, args);
+		System.out.println("✅ Application successfully launched 🚀🚀");
 	}
 }
