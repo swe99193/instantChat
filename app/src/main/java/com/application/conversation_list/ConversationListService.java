@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class ConversationUserService {
+public class ConversationListService {
     private final AmazonDynamoDB client;
 
     @Autowired
-    public ConversationUserService(AmazonDynamoDB client) {
+    public ConversationListService(AmazonDynamoDB client) {
         this.client = client;
     }
 

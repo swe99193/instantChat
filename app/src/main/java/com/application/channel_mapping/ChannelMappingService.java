@@ -2,22 +2,21 @@ package com.application.channel_mapping;
 
 import ChannelMappingServiceLib.*;
 import com.application.conversation_list.ConversationUser;
-import com.application.conversation_list.ConversationUserService;
+import com.application.conversation_list.ConversationListService;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @GrpcService // also include @Service
 public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMappingServiceImplBase {
 
     private final ChannelMappingRepository channelMappingRepository;
-    private final ConversationUserService conversationUserService;
+    private final ConversationListService conversationListService;
 
     @Autowired
-    public ChannelMappingService(ChannelMappingRepository channelMappingRepository, ConversationUserService conversationUserService) {
+    public ChannelMappingService(ChannelMappingRepository channelMappingRepository, ConversationListService conversationListService) {
         this.channelMappingRepository = channelMappingRepository;
-        this.conversationUserService = conversationUserService;
+        this.conversationListService = conversationListService;
     }
 
     /**
@@ -41,8 +40,8 @@ public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMapp
             channel_id = channelMappingRepository.findChannelIdByUsers(user1, user2);
 
             // create an entry for each user
-            conversationUserService.saveConversation(new ConversationUser(user1, user2));
-            conversationUserService.saveConversation(new ConversationUser(user2, user1));
+            conversationListService.saveConversation(new ConversationUser(user1, user2));
+            conversationListService.saveConversation(new ConversationUser(user2, user1));
         }
 
         return channel_id;
