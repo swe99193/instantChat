@@ -6,9 +6,8 @@ option java_outer_classname = "MessageServiceProto";
 
 // Note: service name will be the prefix of the gRPC Bean
 service MessageService {
-    // Sends a greeting
-    rpc SaveMessage (SaveMessageRequest) returns (SaveMessageReply) {}
-    rpc ListMessage (ListMessageRequest) returns (ListMessageReply) {}
+    rpc SaveMessage (SaveMessageRequest) returns (SaveMessageResponse) {}
+    rpc ListMessage (ListMessageRequest) returns (ListMessageResponse) {}
 }
 
 message Message {
@@ -24,7 +23,7 @@ message SaveMessageRequest {
     Message message = 1;
 }
 
-message SaveMessageReply {
+message SaveMessageResponse {
     bool isSuccess = 1;
 }
 
@@ -32,6 +31,6 @@ message ListMessageRequest {
     string channel_id = 1;
 }
 
-message ListMessageReply {
+message ListMessageResponse {
     repeated Message message = 1;
 }

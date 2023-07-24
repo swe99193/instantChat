@@ -31,7 +31,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
     }
 
     @Override
-    public void saveMessage(SaveMessageRequest req, StreamObserver<SaveMessageReply> responseObserver) {
+    public void saveMessage(SaveMessageRequest req, StreamObserver<SaveMessageResponse> responseObserver) {
         MessageServiceLib.Message m = req.getMessage();
 
         // convert to Message class
@@ -40,8 +40,8 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
         DynamoDBMapper mapper = new DynamoDBMapper(client);
         mapper.save(message);
 
-        SaveMessageReply reply = SaveMessageReply.newBuilder().setIsSuccess(true).build();
-        responseObserver.onNext(reply);
+        SaveMessageResponse res = SaveMessageResponse.newBuilder().setIsSuccess(true).build();
+        responseObserver.onNext(res);
         responseObserver.onCompleted();
     }
 
@@ -49,7 +49,7 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
     * query the database based on the partition key "channel id"
     * */
     @Override
-    public void listMessage(ListMessageRequest req, StreamObserver<ListMessageReply> responseObserver){
+    public void listMessage(ListMessageRequest req, StreamObserver<ListMessageResponse> responseObserver){
         String channel_id = req.getChannelId();
 
         DynamoDBMapper mapper = new DynamoDBMapper(client);
@@ -75,8 +75,8 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
             mList.add(m);
         }
 
-        ListMessageReply reply = ListMessageReply.newBuilder().addAllMessage(mList).build();
-        responseObserver.onNext(reply);
+        ListMessageResponse res = ListMessageResponse.newBuilder().addAllMessage(mList).build();
+        responseObserver.onNext(res);
         responseObserver.onCompleted();
     }
 }

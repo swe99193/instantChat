@@ -1,9 +1,9 @@
 package com.application.chat;
 
-import MessageServiceLib.ListMessageReply;
+import MessageServiceLib.ListMessageResponse;
 import MessageServiceLib.ListMessageRequest;
 import MessageServiceLib.MessageServiceGrpc.MessageServiceBlockingStub;
-import MessageServiceLib.SaveMessageReply;
+import MessageServiceLib.SaveMessageResponse;
 import MessageServiceLib.SaveMessageRequest;
 import com.application.channel_mapping.ChannelMappingService;
 //import com.application.message_storage.Message;
@@ -47,8 +47,8 @@ public class ChatService {
                 .setContent(content)
                 .build();
         SaveMessageRequest req = SaveMessageRequest.newBuilder().setMessage(message).build();
-        SaveMessageReply reply = messageService.saveMessage(req);
-        boolean isSuccess = reply.getIsSuccess();
+        SaveMessageResponse res = messageService.saveMessage(req);
+        boolean isSuccess = res.getIsSuccess();
     }
 
     public List<Message> listMessage(String sender, String receiver){
@@ -57,8 +57,8 @@ public class ChatService {
 
         // gRPC
         ListMessageRequest req = ListMessageRequest.newBuilder().setChannelId(channel_id).build();
-        ListMessageReply reply = messageService.listMessage(req);
-        List<MessageServiceLib.Message> mList = reply.getMessageList();
+        ListMessageResponse res = messageService.listMessage(req);
+        List<MessageServiceLib.Message> mList = res.getMessageList();
 
         // convert to Message Class
         List<Message> messageList = new ArrayList<Message>();
