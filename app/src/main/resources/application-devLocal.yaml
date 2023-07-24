@@ -55,3 +55,9 @@ grpc:
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext
+
+        grpc-server-conversation-list: # gRPC server name
+            address: 'static://127.0.0.1:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext

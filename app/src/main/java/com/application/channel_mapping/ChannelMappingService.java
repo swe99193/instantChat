@@ -1,9 +1,15 @@
 package com.application.channel_mapping;
 
-import ChannelMappingServiceLib.*;
-import com.application.conversation_list.ConversationUser;
-import com.application.conversation_list.ConversationListService;
+import ChannelMappingServiceLib.ChannelMappingServiceGrpc;
+import ChannelMappingServiceLib.findChannelIdRequest;
+import ChannelMappingServiceLib.findChannelIdResponse;
+import ConversationListServiceLib.ConversationListServiceGrpc.ConversationListServiceBlockingStub;
+import ConversationListServiceLib.saveConversationRequest;
+import ConversationListServiceLib.saveConversationResponse;
+//import com.application.conversation_list.ConversationUser;
+//import com.application.conversation_list.ConversationListService;
 import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,12 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMappingServiceImplBase {
 
     private final ChannelMappingRepository channelMappingRepository;
-    private final ConversationListService conversationListService;
+
+    @GrpcClient("grpc-server-conversation-list")
+    private ConversationListServiceBlockingStub conversationListService;
 
     @Autowired
-    public ChannelMappingService(ChannelMappingRepository channelMappingRepository, ConversationListService conversationListService) {
+    public ChannelMappingService(ChannelMappingRepository channelMappingRepository) {
         this.channelMappingRepository = channelMappingRepository;
-        this.conversationListService = conversationListService;
     }
 
     /**
@@ -40,11 +47,16 @@ public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMapp
             channel_id = channelMappingRepository.findChannelIdByUsers(user1, user2);
 
             // create an entry for each user
-            conversationListService.saveConversation(new ConversationUser(user1, user2));
-            conversationListService.saveConversation(new ConversationUser(user2, user1));
+            saveConversationGrpc(user1, user2);
+            saveConversationGrpc(user2, user1);
         }
 
         return channel_id;
+    }
+
+    public void saveConversationGrpc(String user1, String user2){
+        saveConversationRequest req = saveConversationRequest.newBuilder().setUsername(user1).setChatUser(user2).build();
+        saveConversationResponse res = conversationListService.saveConversation(req);
     }
 
     /**
