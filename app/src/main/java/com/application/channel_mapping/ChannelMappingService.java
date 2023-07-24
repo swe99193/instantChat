@@ -1,12 +1,15 @@
 package com.application.channel_mapping;
 
+import ChannelMappingServiceLib.*;
 import com.application.conversation_list.ConversationUser;
 import com.application.conversation_list.ConversationUserService;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-@Service
-public class ChannelMappingService {
+@GrpcService // also include @Service
+public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMappingServiceImplBase {
 
     private final ChannelMappingRepository channelMappingRepository;
     private final ConversationUserService conversationUserService;
@@ -40,10 +43,22 @@ public class ChannelMappingService {
             // create an entry for each user
             conversationUserService.saveConversation(new ConversationUser(user1, user2));
             conversationUserService.saveConversation(new ConversationUser(user2, user1));
-            return channel_id;
-        }else{
-            return channel_id;
         }
+
+        return channel_id;
     }
 
+    /**
+     * gRPC method, wrap original service function
+     */
+    public void findChannelId(findChannelIdRequest req, StreamObserver<findChannelIdResponse> responseObserver){
+        String user1 = req.getUser1();
+        String user2 = req.getUser2();
+
+        String channel_id = findChannelId(user1, user2);
+
+        findChannelIdResponse res = findChannelIdResponse.newBuilder().setChannelId(channel_id).build();
+        responseObserver.onNext(res);
+        responseObserver.onCompleted();
+    }
 }
