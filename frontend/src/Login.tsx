@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
 import "./Login.css";
@@ -31,10 +31,8 @@ function Login() {
       // login success
       setUsername((document.getElementById("username") as HTMLInputElement).value)
       setIsSubmitted(true);
-      localStorage.setItem("login_expiration", String(Date.now()/1000 + 2*60*60)); // unit: sec
-      localStorage.setItem("username", (document.getElementById("username") as HTMLInputElement).value);
 
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 1000));
       window.location.replace(`${FRONTEND_URL}`);  // redirect to main page
 
     } else {

@@ -28,9 +28,10 @@ public class WebSecurityConfig{
                 .cors().and()
                 .csrf().disable()   // FIXME: disable temporarily
                 .authorizeRequests()
-//                    .requestMatchers("/**")   // match any routes
-                    .requestMatchers("/register", "/test/**", "/login")
-                    .permitAll()
+            // allow these routes to be accessed without authentication
+//                .requestMatchers("/**")   // match any routes
+                .requestMatchers("/register", "/test/**", "/login", "/auth/**")
+                .permitAll()
                 .and()
                 .authorizeRequests()
                 .anyRequest()

@@ -12,6 +12,7 @@ import {
   ConversationHeader,
 } from "@chatscope/chat-ui-kit-react";
 import Stomp from 'stompjs';
+import { useAppSelector } from './redux/hooks';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
@@ -25,6 +26,7 @@ function ChatRoom({ stompClient, receiver }: props) {
     const [msgInputValue, setMsgInputValue] = useState("");
     const [messages, setMessages] = useState<MessageModel[]>([]);
     const [inputDisabled, setInputDisabled] = useState(true);
+    const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
     const handleSend = (message: string) => {
         // setMessages(messages => [...messages, {
@@ -92,7 +94,8 @@ function ChatRoom({ stompClient, receiver }: props) {
           handleReceive(JSON.parse(message.body).content);
         }, { "auto-delete": true });
 
-        const echoSub = stompClient.subscribe(`/user/queue/private.${receiver}-${localStorage.getItem("username")}`, function (message) {
+        // TODO: replace localStorage with Redux store
+        const echoSub = stompClient.subscribe(`/user/queue/private.${receiver}-${currentUserId}`, function (message) {
           handleSendEcho(JSON.parse(message.body).content);
         }, { "auto-delete": true });
 

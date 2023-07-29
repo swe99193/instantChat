@@ -7,13 +7,35 @@ import Login from './Login';
 import Logout from './Logout';
 import Register from './Register';
 
+import { useAppDispatch, useAppSelector } from './redux/hooks';
+import { login } from './features/login/loginSlice';
+
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+
+
 function App() {
-  // check login state
-  const expiration = localStorage.getItem("login_expiration");
-  var loggedin = true;
-  if (expiration == null || Number(expiration) < Date.now()/1000){    // login expiration must exist and still valid
-    loggedin = false;
+  const loggedin = useAppSelector(state => state.login.loggedin); // Redux
+  const dispatch = useAppDispatch(); // Redux
+
+
+  const checkLoginStatus = async() => {
+    console.log("🟢 App rendered")
+
+    const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
+    const userId = await res.text();
+
+    if(userId != ""){
+      dispatch(login(userId)); // update Redux
+    }
+
+    console.log(userId);
   }
+
+  useEffect(()=>{
+	  checkLoginStatus();
+  }, []);
 
   return(
     <BrowserRouter>
