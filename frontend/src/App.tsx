@@ -16,41 +16,41 @@ const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 
 
 function App() {
-  const loggedin = useAppSelector(state => state.login.loggedin); // Redux
-  const dispatch = useAppDispatch(); // Redux
+    const loggedin = useAppSelector(state => state.login.loggedin); // Redux
+    const dispatch = useAppDispatch(); // Redux
 
 
-  const checkLoginStatus = async() => {
-    console.log("🟢 App rendered")
+    const checkLoginStatus = async () => {
+        console.log("🟢 App rendered")
 
-    const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
-    const userId = await res.text();
+        const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
+        const userId = await res.text();
 
-    if(userId != ""){
-      dispatch(login(userId)); // update Redux
+        if (userId != "") {
+            dispatch(login(userId)); // update Redux
+        }
+
+        console.log(userId);
     }
 
-    console.log(userId);
-  }
+    useEffect(() => {
+        checkLoginStatus();
+    }, []);
 
-  useEffect(()=>{
-	  checkLoginStatus();
-  }, []);
-
-  return(
-    <BrowserRouter>
-      <Routes>
-          <Route path="/" element={loggedin ? <ChatLayout/>: <Navigate to="/login"/>}/>
-          {/* <Route path='/login' Component={() => {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={loggedin ? <ChatLayout /> : <Navigate to="/login" />} />
+                {/* <Route path='/login' Component={() => {
                 window.location.replace('http://localhost:8080/login');   // backend login page
                 return null;
             }}/> */}
-          <Route path='/login' element={loggedin ? <Navigate to="/"/>: <Login/>}/>
-          <Route path='/logout' element={<Logout/>}/>
-          <Route path='/register' element={<Register/>}/>
-      </Routes>
-    </BrowserRouter>
-  );
+                <Route path='/login' element={loggedin ? <Navigate to="/" /> : <Login />} />
+                <Route path='/logout' element={<Logout />} />
+                <Route path='/register' element={<Register />} />
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

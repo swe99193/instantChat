@@ -15,9 +15,9 @@ function Register() {
         let formData = new FormData();
         formData.append('username', (document.getElementById("username") as HTMLInputElement).value);
         formData.append('password', (document.getElementById("password") as HTMLInputElement).value);
-    
+
         const res = await fetch(`${BACKEND_URL}/register`, {
-            method: "POST", 
+            method: "POST",
             body: formData
         });
 
