@@ -38,7 +38,7 @@ function Register() {
                     <input type="password" id="password" name="password" required />
                 </div>
                 <div className="button-container">
-                    <input type="submit" />
+                    <input type="submit" value="Register " />
                 </div>
             </form>
         </div>
@@ -47,7 +47,7 @@ function Register() {
     return (
         <div className="app">
             <div className="register-form">
-                <div className="title">Register</div>
+                <div className="title">Register Now</div>
                 {renderForm}
             </div>
         </div>
