@@ -70,9 +70,22 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 
 		ArrayList<String> LocalProfileList = new ArrayList<String>(Arrays.asList("devLocal"));
-		ArrayList<String> AWSProfileList = new ArrayList<String>(Arrays.asList("devLocalAWS", "devAWS"));
 
-		if (AWSProfileList.contains(profile)) {
+		if (LocalProfileList.contains(profile)) {
+			// localhost MQ
+			config.enableStompBrokerRelay("/topic", "/queue")
+					.setAutoStartup(true)	// not sure (?)
+					.setUserDestinationBroadcast("/topic/log-unresolved-user")
+					.setUserRegistryBroadcast("/topic/log-user-registry")
+					.setRelayHost(rabbitmqHost)
+					.setRelayPort(rabbitmqPort)
+					.setSystemLogin(rabbitmqUsername)
+					.setSystemPasscode(rabbitmqPassword)
+					.setClientLogin(rabbitmqUsername)
+					.setClientPasscode(rabbitmqPassword);
+		}
+		else {
+			// AWS MQ
 			// AWS MQ need TCP Client
 			ReactorNettyTcpClient<byte[]> tcpClient = new ReactorNettyTcpClient<>(builder ->
 					builder
@@ -94,21 +107,6 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 					.setClientPasscode(rabbitmqPassword)
 					// need both System and Client credentials
 					.setTcpClient(tcpClient);
-		}
-		else if (LocalProfileList.contains(profile)) {
-			config.enableStompBrokerRelay("/topic", "/queue")
-					.setAutoStartup(true)	// not sure (?)
-					.setUserDestinationBroadcast("/topic/log-unresolved-user")
-					.setUserRegistryBroadcast("/topic/log-user-registry")
-					.setRelayHost(rabbitmqHost)
-					.setRelayPort(rabbitmqPort)
-					.setSystemLogin(rabbitmqUsername)
-					.setSystemPasscode(rabbitmqPassword)
-					.setClientLogin(rabbitmqUsername)
-					.setClientPasscode(rabbitmqPassword);
-		}
-		else{
-			return;
 		}
 
 
