@@ -9,6 +9,7 @@ import { TextField } from '@mui/material';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 interface userObject {
     username: string,
@@ -26,7 +27,7 @@ function ChatLayout() {
     const userMap = useRef<any>({}); // { username -> true }
     const [receiver, setReceiver] = useState("");
 
-    const stompClient = useRef<Stomp.Client>(Stomp.client(`ws://localhost:8080/gs-guide-websocket`));
+    const stompClient = useRef<Stomp.Client>(Stomp.client(`ws://${WEBSOCKET_ENDPOINT}/gs-guide-websocket`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
 
     // render list of conversation users in side bar
