@@ -4,15 +4,15 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
-@DynamoDBTable(tableName = "conversation-user")
-public class ConversationUser {
+@DynamoDBTable(tableName = "conversation")
+public class Conversation {
     private String username;
     private String chatUser;
 
-    public ConversationUser() {
+    public Conversation() {
     }
 
-    public ConversationUser(String username, String chatUser) {
+    public Conversation(String username, String chatUser) {
         this.username = username;
         this.chatUser = chatUser;
     }

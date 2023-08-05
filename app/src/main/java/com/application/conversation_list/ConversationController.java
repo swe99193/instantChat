@@ -11,20 +11,20 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(path = "/conversationList")
-public class ConversationListController {
-    private final ConversationListService conversationListService;
+@RequestMapping(path = "/conversation")
+public class ConversationController {
+    private final ConversationService conversationService;
 
     @Autowired
-    public ConversationListController(ConversationListService conversationListService) {
-        this.conversationListService = conversationListService;
+    public ConversationController(ConversationService conversationService) {
+        this.conversationService = conversationService;
     }
 
     /**
     * return a list of conversation user for a user
     */
     @GetMapping
-    public List<ConversationUser> listConversationUser(Principal principal){
-        return conversationListService.listConversationUser(principal.getName());
+    public List<Conversation> listConversation(Principal principal){
+        return conversationService.listConversation(principal.getName());
     }
 }

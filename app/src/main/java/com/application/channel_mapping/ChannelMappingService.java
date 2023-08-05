@@ -3,9 +3,9 @@ package com.application.channel_mapping;
 import ChannelMappingServiceLib.ChannelMappingServiceGrpc;
 import ChannelMappingServiceLib.findChannelIdRequest;
 import ChannelMappingServiceLib.findChannelIdResponse;
-import ConversationListServiceLib.ConversationListServiceGrpc.ConversationListServiceBlockingStub;
-import ConversationListServiceLib.saveConversationRequest;
-import ConversationListServiceLib.saveConversationResponse;
+import ConversationServiceLib.ConversationServiceGrpc.ConversationServiceBlockingStub;
+import ConversationServiceLib.saveConversationRequest;
+import ConversationServiceLib.saveConversationResponse;
 //import com.application.conversation_list.ConversationUser;
 //import com.application.conversation_list.ConversationListService;
 import io.grpc.stub.StreamObserver;
@@ -18,8 +18,8 @@ public class ChannelMappingService extends ChannelMappingServiceGrpc.ChannelMapp
 
     private final ChannelMappingRepository channelMappingRepository;
 
-    @GrpcClient("grpc-server-conversation-list")
-    private ConversationListServiceBlockingStub conversationListService;
+    @GrpcClient("grpc-server-conversation")
+    private ConversationServiceBlockingStub conversationListService;
 
     @Autowired
     public ChannelMappingService(ChannelMappingRepository channelMappingRepository) {

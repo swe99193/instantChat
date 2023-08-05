@@ -1,11 +1,11 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "ConversationListServiceLib";
-option java_outer_classname = "ConversationListServiceProto";
+option java_package = "ConversationServiceLib";
+option java_outer_classname = "ConversationServiceProto";
 
 // Note: service name will be the prefix of the gRPC Bean
-service ConversationListService {
+service ConversationService {
   rpc saveConversation (saveConversationRequest) returns (saveConversationResponse) {}
 }
 

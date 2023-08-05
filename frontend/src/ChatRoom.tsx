@@ -75,7 +75,7 @@ function ChatRoom({ stompClient, receiver }: props) {
                     message: message.content,
                     sentTime: new Date(message.timestamp).toLocaleString('zh-Hans-CN').slice(0, -3),
                     sender: message.sender,
-                    direction: (message.sender == receiver) ? "incoming" : "outgoing",
+                    direction: (message.sender == currentUserId) ? "outgoing" : "incoming",
                     position: "single"
                 };
             });
@@ -90,6 +90,8 @@ function ChatRoom({ stompClient, receiver }: props) {
     }
 
     const subscribeQueue = () => {
+        // TODO: push "READ" to MQ
+
         const receiveSub = stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
             handleReceive(JSON.parse(message.body).content);
         }, { "auto-delete": true });
