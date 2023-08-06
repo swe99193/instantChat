@@ -1,4 +1,4 @@
-package com.application.conversation_list;
+package com.application.conversation;
 
 import ConversationServiceLib.ConversationServiceGrpc;
 import ConversationServiceLib.saveConversationRequest;
@@ -11,6 +11,8 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +33,12 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
     }
 
     /**
-     * gRPC method, wrap original service function
+     * gRPC method, wrap internal function {@link ConversationService#saveConversation(Conversation) saveConversation}
      */
     @Override
     public void saveConversation(saveConversationRequest req, StreamObserver<saveConversationResponse> responseObserver) {
+        System.out.printf("🟢 gRPC conversation-service: saveConversation   ---  %s\n", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
+
         saveConversation(new Conversation(req.getUsername(), req.getChatUser()));
 
         saveConversationResponse res = saveConversationResponse.newBuilder().build();
@@ -46,6 +50,8 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
      * query the database based on the partition key "username"
      * */
     public List<Conversation> listConversation(String username){
+        System.out.printf("🟢 conversation-service: listConversation   ---  %s\n", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
+
         DynamoDBMapper mapper = new DynamoDBMapper(client);
         Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
         eav.put(":val1", new AttributeValue().withS(username));

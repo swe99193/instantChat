@@ -60,7 +60,7 @@ grpc:
             negotiationType: plaintext
 
         grpc-server-conversation: # gRPC server name
-            address: 'static://127.0.0.1:9090'
+            address: 'static://127.0.0.1:9092'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext

@@ -10,21 +10,13 @@ spring:
 server:
     port: 8081
 
-    servlet:
-        session:
-            timeout: 360000  # session timeout, 100 hrs
-
-frontend:
-    url: http://localhost:3000
-
 grpc:
     server:
         port: 9091
 
     client:
-
         grpc-server-conversation: # gRPC server name
-            address: 'static://127.0.0.1:9090'
+            address: 'static://127.0.0.1:9092'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext

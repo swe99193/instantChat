@@ -1,4 +1,4 @@
-package com.application.conversation_list;
+package com.application.conversation;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
