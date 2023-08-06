@@ -1,8 +1,7 @@
-package com.application.message_storage;
+package com.application.config;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -18,7 +17,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableDynamoDBRepositories
-        (basePackages = "com.application.message_storage")
+        (basePackages = "com.application")
 public class DynamoDBConfig {
 
     @Value("${spring.profiles.active}")

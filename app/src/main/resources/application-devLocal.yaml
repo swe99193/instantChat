@@ -48,7 +48,7 @@ grpc:
 
     client:
         grpc-server-message: # gRPC server name
-            address: 'static://127.0.0.1:9090'
+            address: 'static://127.0.0.1:9093'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext

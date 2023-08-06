@@ -1,0 +1,36 @@
+spring:
+    datasource:
+        username: postgres
+        password: ajgoi4awer9   # AWS RDS
+        url: jdbc:postgresql://dev-simple-instantchat.cgmlvpisjwrn.us-east-1.rds.amazonaws.com:8050/InstantChat   # AWS RDS
+    #        password: postgres     # local
+    #        url: jdbc:postgresql://localhost:8050/InstantChat  # local
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: localhost # local
+            port: 6379
+
+server:
+    port: 8083
+
+amazon:
+    aws:
+        accesskey: ${AWS_ACCESS_KEY}
+        secretkey: ${AWS_SECRET_KEY}
+    dynamodb:
+        endpoint: ${DYNAMODB_URL}
+
+grpc:
+    server:
+        port: 9093
