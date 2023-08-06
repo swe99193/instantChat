@@ -36,7 +36,8 @@ function ChatLayout() {
      */
     const fetchConversation = async () => {
 
-        const response = await fetch(`${BACKEND_URL}/conversation`, { credentials: "include" });
+        // const response = await fetch(`${BACKEND_URL}/conversation`, { credentials: "include" });
+        const response = await fetch(`http://localhost:8082/conversation`, { credentials: "include" });
 
         let list: Array<any> = await response.json();
 
