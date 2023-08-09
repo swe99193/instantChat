@@ -23,7 +23,8 @@ function App() {
     const checkLoginStatus = async () => {
         console.log("🟢 App rendered")
 
-        const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
+        // const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
+        const res = await fetch(`http://localhost:8084/auth`, { credentials: "include" });
         const userId = await res.text();
 
         if (userId != "") {

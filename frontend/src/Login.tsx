@@ -19,7 +19,8 @@ function Login() {
 
         event.preventDefault();
 
-        const res = await fetch(`${BACKEND_URL}/login`, {
+        // const res = await fetch(`${BACKEND_URL}/login`, {
+        const res = await fetch(`http://localhost:8084/login`, {
             method: "POST",
             body: JSON.stringify({
                 username: (document.getElementById("username") as HTMLInputElement).value,

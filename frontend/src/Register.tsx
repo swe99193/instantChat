@@ -16,7 +16,8 @@ function Register() {
         formData.append('username', (document.getElementById("username") as HTMLInputElement).value);
         formData.append('password', (document.getElementById("password") as HTMLInputElement).value);
 
-        const res = await fetch(`${BACKEND_URL}/register`, {
+        // const res = await fetch(`${BACKEND_URL}/register`, {
+        const res = await fetch(`http://localhost:8084/register`, {
             method: "POST",
             body: formData
         });
