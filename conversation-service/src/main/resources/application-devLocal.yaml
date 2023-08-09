@@ -1,10 +1,8 @@
 spring:
     datasource:
         username: postgres
-        password: ajgoi4awer9   # AWS RDS
-        url: jdbc:postgresql://dev-simple-instantchat.cgmlvpisjwrn.us-east-1.rds.amazonaws.com:8050/InstantChat   # AWS RDS
-    #        password: postgres     # local
-    #        url: jdbc:postgresql://localhost:8050/InstantChat  # local
+        password: postgres
+        url: jdbc:postgresql://localhost:8050/InstantChat
     jpa:
         hibernate:
             ddl-auto: update
