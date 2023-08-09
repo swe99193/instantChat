@@ -8,7 +8,6 @@ import MessageServiceLib.ListMessageRequest;
 import MessageServiceLib.MessageServiceGrpc.MessageServiceBlockingStub;
 import MessageServiceLib.SaveMessageResponse;
 import MessageServiceLib.SaveMessageRequest;
-//import com.application.message_storage.Message;
 import com.application.message_storage.Message;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
