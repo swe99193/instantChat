@@ -1,7 +1,6 @@
 package com.application.security;
 
-import net.devh.boot.grpc.server.security.authentication.BasicGrpcAuthenticationReader;
-import net.devh.boot.grpc.server.security.authentication.GrpcAuthenticationReader;
+import com.application.registration.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -58,6 +57,41 @@ public class WebSecurityConfig{
         return http.build();
     }
 
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    @Autowired
+    AuthenticationManagerBuilder builder;
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        // How DaoAuthenticationProvider works:
+        // https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/dao-authentication-provider.html#servlet-authentication-daoauthenticationprovider
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userService);
+        authenticationProvider.setPasswordEncoder(bCryptPasswordEncoder);
+
+        return new ProviderManager(authenticationProvider);
+    }
+
+    // This code not working
+//    @Autowired
+//    AuthenticationManagerBuilder auth;
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager() throws Exception {
+//        return auth.authenticationProvider(new DaoAuthenticationProvider()).userDetailsService(userService)
+//                .passwordEncoder(bCryptPasswordEncoder).and().build();
+//    }
+
+
+    @Bean
+    public SecurityContextRepository securityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
+    }
 
     // ref: https://docs.spring.io/spring-security/reference/reactive/integrations/cors.html
     @Bean
