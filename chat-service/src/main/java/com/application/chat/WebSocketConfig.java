@@ -69,7 +69,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 
-		ArrayList<String> LocalProfileList = new ArrayList<String>(Arrays.asList("devLocal"));
+		ArrayList<String> LocalProfileList = new ArrayList<String>(Arrays.asList("Local"));
 
 		if (LocalProfileList.contains(profile)) {
 			// localhost MQ
