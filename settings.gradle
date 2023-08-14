@@ -1,4 +1,9 @@
 rootProject.name = 'InstantChat-backend'
 
 include "app"
+include "channel-mapping-service"
+include "conversation-service"
+include "message-storage-service"
+include "authentication-service"
+include "chat-service"
 include "grpc-lib"
