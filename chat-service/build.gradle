@@ -26,6 +26,10 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// DynamoDB
+	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.490'
+	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
+
 	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
 	implementation project(':grpc-lib')
