@@ -27,7 +27,7 @@ public class ChatService {
         this.messageService = messageService;
     }
 
-    public void saveMessage(String sender, String receiver, String content){
+    public void saveMessage(String sender, String receiver, ChatMessage chatMessage){
 //        String channel_id = channelMappingService.findChannelId(sender, receiver);
 
         // gRPC, get channel_id
@@ -35,8 +35,7 @@ public class ChatService {
         findChannelIdResponse _res = channelMappingService.findChannelId(_req);
         String channel_id = _res.getChannelId();
 
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        Message message = new Message(channel_id, timestamp.getTime(), sender, receiver, "text", content);
+        Message message = new Message(channel_id, chatMessage.getTimestamp(), sender, receiver, "text", chatMessage.getContent());
 
         messageService.saveMessage(message);
     }

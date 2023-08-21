@@ -1,18 +1,17 @@
 package com.application.chat;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.sql.Timestamp;
+
+@AllArgsConstructor
+@Getter
+@Setter
 public class ChatMessage {
 
 	private String content;
-
-	public ChatMessage() {
-	}
-
-	public ChatMessage(String content) {
-		this.content = content;
-	}
-
-	public String getContent() {
-		return content;
-	}
+	private Long timestamp;
 
 }
