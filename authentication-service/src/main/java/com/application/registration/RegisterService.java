@@ -1,5 +1,7 @@
 package com.application.registration;
 
+import com.application.user.User;
+import com.application.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

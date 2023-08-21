@@ -1,6 +1,6 @@
 package com.application.security;
 
-import com.application.registration.UserService;
+import com.application.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
