@@ -1,11 +1,8 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
-import { redirect } from "react-router-dom";
+import React from "react";
 
-import "./Register.css";
+// import "./Register.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 
 function Register() {
     const handleSubmit = async (event: React.FormEvent) => {
@@ -23,7 +20,7 @@ function Register() {
         });
 
         alert("Register an account successful");
-        window.location.replace(`${FRONTEND_URL}/login`); // redirect
+        window.location.replace(`/login`); // redirect
 
     }
 

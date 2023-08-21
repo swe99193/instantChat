@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useState } from "react";
 
-import "./Login.css";
+// import "./Login.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 
 
 // TODO: rewrite with MUI
@@ -39,7 +37,7 @@ function Login() {
             setIsSubmitted(true);
 
             await new Promise(r => setTimeout(r, 1000));
-            window.location.replace(`${FRONTEND_URL}`);  // redirect to main page
+            window.location.replace("");  // redirect to main page
 
         } else {
             // Invalid username & password, or other errors

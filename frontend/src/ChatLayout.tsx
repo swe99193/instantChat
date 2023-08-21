@@ -1,14 +1,17 @@
-import React, { useRef, useState, useEffect } from 'react';
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-
+import { useEffect, useRef, useState } from 'react';
 import Stomp from 'stompjs';
+
+// mui
+import { Avatar, Badge, Drawer, InputAdornment, List, ListItemAvatar, ListItemButton, ListItemText, TextField, Typography } from '@mui/material';
+
+// mui icons
+import { Search } from '@mui/icons-material';
+
+// components
 import ChatRoom from './ChatRoom';
-import { Avatar, Conversation, ConversationList, MainContainer, Sidebar } from '@chatscope/chat-ui-kit-react';
-import { TextField } from '@mui/material';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
 const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 interface userObject {
@@ -19,7 +22,6 @@ interface userObject {
 interface conversation {
     username: string,
     profilePictureUrl: string
-    active: boolean
 }
 
 function ChatLayout() {
@@ -50,14 +52,13 @@ function ChatLayout() {
                 return {
                     username: username,
                     profilePictureUrl: "https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537",
-                    active: false
                 };
             });
             return conversation.concat(arr);
         });
     }
 
-    const ConversationOnClick = (username: string) => {
+    const ConversationOnClick = (username: string) => (event) => {
         // wait for stomp connection
         if (!isConnected)
             return;
@@ -70,7 +71,6 @@ function ChatLayout() {
                 return {
                     username: item["username"],
                     profilePictureUrl: "https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537",
-                    active: item["username"] == username ? true : false
                 };
             });
         });
@@ -93,11 +93,15 @@ function ChatLayout() {
         }
 
         // chech user exists
-        const response = await fetch(`${BACKEND_URL}/user?username=${username}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/user?username=${username}`, { credentials: "include" });
 
-        let isUserExist: boolean = await response.json();
+        const resJson = await res.json();
 
-        if (!isUserExist) {
+        if (res.status != 200) {
+            console.log("🔴 Server error");
+            return;
+        }
+        else if (!resJson.user_exist) {
             alert("Error: user does not exist");
             return;
         }
@@ -151,23 +155,76 @@ function ChatLayout() {
 
 
     return (
-        <div style={{ "height": "95vh" }}>
-            <MainContainer>
-                <Sidebar position="left">
-                    <TextField autoFocus={false} label="Chat with someone" placeholder="Search" onKeyDown={startNewChat} sx={{ "margin": "10px" }} size="small" > </TextField>
-                    <ConversationList>
-                        {
-                            conversationList.map((item, idx) =>
-                                <Conversation name={item.username} lastSenderName="" info="" onClick={() => ConversationOnClick(item.username)} active={item.active}>
-                                    <Avatar src={item.profilePictureUrl} name={item.username} />
-                                </Conversation>
-                            )
-                        }
-                    </ConversationList>
+        <div style={{ "height": "100vh", display: "flex" }}>
 
-                </Sidebar>
-                {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} /> : <></>}
-            </MainContainer>
+            {/* side bar */}
+            <Drawer variant="permanent" sx={{
+                width: "300px",
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: "300px",
+                    boxSizing: 'border-box',
+                },
+            }}>
+                <TextField
+                    autoFocus={false}
+                    label="Chat with someone"
+                    placeholder="Search"
+                    onKeyDown={startNewChat}
+                    sx={{ "margin": "10px", borderColor: "red" }}
+                    size="small"
+                    InputProps={{
+                        startAdornment: (
+                            // search icon
+                            <InputAdornment position="start">
+                                <Search />
+                            </InputAdornment>
+                        )
+                    }}
+                    variant="outlined"
+                />
+
+                <List>
+                    {
+                        conversationList.map((item, idx) =>
+                            <ListItemButton alignItems="flex-start" selected={receiver == item.username} onClick={ConversationOnClick(item.username)}>
+                                <ListItemAvatar>
+                                    {/* TODO: online status */}
+                                    <Badge variant="dot" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} color="success" invisible={false} sx={{
+                                        '& .MuiBadge-badge': {
+                                            backgroundColor: '#32cd32',
+                                            color: '#32cd32',
+                                            boxShadow: `0 0 0 2px white`,
+                                        },
+                                    }} overlap="circular">
+                                        <Avatar src={item.profilePictureUrl} />
+                                    </Badge>
+                                </ListItemAvatar>
+                                <ListItemText
+                                    primary={
+                                        <Typography
+                                            sx={{ display: 'inline' }}
+                                            component="span"
+                                            variant="body2"
+                                            color="text.primary"
+                                        >
+                                            {item.username}
+                                        </Typography>}
+
+                                    // TODO: display latest message
+                                    secondary={"latest message..."}
+                                />
+                                {/* TODO: unread message counts */}
+                                {/* adjust Badge position: https://stackoverflow.com/questions/71399377/how-to-position-mui-badge-in-iconbutton-border-in-reactjs */}
+                                <Badge badgeContent={4} color="error" invisible={false} style={{ transform: 'translate(0px, 25px)' }}></Badge>
+                            </ListItemButton>
+                        )
+                    }
+                </List>
+            </Drawer>
+
+            {/* chat contrainer */}
+            {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} /> : <></>}
         </div>
     );
 }
