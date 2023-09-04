@@ -7,31 +7,33 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 @DynamoDBTable(tableName = "message")
 public class Message {
-    private String channel_id;
+    private String channelId;
     private Long timestamp;
     private String sender;
     private String receiver;
     private String contentType;
     private String content;
+    private Long fileSize;
 
     public Message() {
     }
 
-    public Message(String channel_id, Long timestamp, String sender, String receiver, String contentType, String content) {
-        this.channel_id = channel_id;
+    public Message(String channelId, Long timestamp, String sender, String receiver, String contentType, String content, Long fileSize) {
+        this.channelId = channelId;
         this.timestamp = timestamp;
         this.sender = sender;
         this.receiver = receiver;
         this.contentType = contentType;
         this.content = content;
+        this.fileSize = fileSize;
     }
 
     @DynamoDBHashKey(attributeName="channel_id")
-    public String getChannel_id() {
-        return channel_id;
+    public String getChannelId() {
+        return channelId;
     }
-    public void setChannel_id(String channel_id) {
-        this.channel_id = channel_id;
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
     }
 
     @DynamoDBRangeKey(attributeName="timestamp")
@@ -60,7 +62,7 @@ public class Message {
         this.receiver = receiver;
     }
 
-    @DynamoDBAttribute(attributeName="contentType")
+    @DynamoDBAttribute(attributeName="content_type")
     public String getContentType() {
         return contentType;
     }
@@ -76,5 +78,14 @@ public class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    @DynamoDBAttribute(attributeName="file_size")
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
     }
 }

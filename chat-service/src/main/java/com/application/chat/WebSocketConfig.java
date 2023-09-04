@@ -12,10 +12,10 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 //import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.session.web.socket.config.annotation.AbstractSessionWebSocketMessageBrokerConfigurer;
 import org.springframework.session.Session;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 
 // simple websocket conifguration
 
@@ -119,6 +119,12 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/gs-guide-websocket").setAllowedOrigins(frontendUrl);
+	}
+
+	@Override
+	public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+		registration.setMessageSizeLimit(1024 * 1024 * 1024);
+		registration.setSendTimeLimit(15 * 1000).setSendBufferSizeLimit(512 * 1024);
 	}
 
 }

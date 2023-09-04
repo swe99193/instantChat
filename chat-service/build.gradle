@@ -30,6 +30,9 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.490'
 	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
 
+	// S3
+	implementation 'software.amazon.awssdk:s3:2.20.135'
+
 	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
 	implementation project(':grpc-lib')

@@ -2,16 +2,19 @@ package com.application.chat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
 
 @AllArgsConstructor
 @Getter
 @Setter
-public class ChatMessage {
+@NoArgsConstructor
+public class OutgoingMessage {
 
+	private String contentType;
 	private String content;
+	private Long fileSize;
 	private Long timestamp;
 
 }
