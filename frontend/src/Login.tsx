@@ -2,12 +2,17 @@ import React, { useState } from "react";
 
 // import "./Login.css";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// redux
+import { useAppSelector } from './redux/hooks';
+import { Navigate } from "react-router-dom";
 
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // TODO: rewrite with MUI
 
 function Login() {
+    const status = useAppSelector(state => state.login.status); // Redux
     const [errorMessages, setErrorMessages] = useState("");
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [username, setUsername] = useState("");
@@ -64,14 +69,19 @@ function Login() {
         </div>
     );
 
-    return (
-        <div className="app">
-            <div className="login-form">
-                <div className="title">Sign In</div>
-                {isSubmitted ? <div> Welcome Back, {username} </div> : renderForm}
+    if (status == "init")
+        return (<></>);     // blank page during authentication (better user experience)
+    else if (status == "login")
+        return (<Navigate to="/" />);
+    else    // status == "logout"
+        return (
+            <div className="app">
+                <div className="login-form">
+                    <div className="title">Sign In</div>
+                    {isSubmitted ? <div> Welcome Back, {username} </div> : renderForm}
+                </div>
             </div>
-        </div>
-    );
+        );
 }
 
 export default Login;

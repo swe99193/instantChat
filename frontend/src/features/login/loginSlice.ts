@@ -2,12 +2,12 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 
 export interface LoginState {
-    loggedin: boolean;
+    status: "init" | "login" | "logout";
     userId: string;
 }
 
 const initialState: LoginState = {
-    loggedin: false,
+    status: "init",
     userId: ""
 };
 
@@ -17,11 +17,11 @@ export const loginSlice = createSlice({
     // The `reducers` field lets us define reducers and generate associated actions
     reducers: {
         login: (state, action) => {
-            state.loggedin = true;
+            state.status = "login";
             state.userId = action.payload;
         },
         logout: (state) => {
-            state.loggedin = false;
+            state.status = "logout";
             state.userId = "";
         },
     },
