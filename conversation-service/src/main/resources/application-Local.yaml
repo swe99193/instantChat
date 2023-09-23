@@ -1,0 +1,90 @@
+# application configuration for local k8 minikube
+
+spring:
+    datasource:
+        username: ${PG_USERNAME}
+        password: ${PG_PASSWORD}
+        url: ${PG_URL}
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: ${REDIS_URL}
+            port: 6379
+
+server:
+    port: 8080
+
+    servlet:
+        session:
+            timeout: 360000  # session timeout, 100 hrs
+
+amazon:
+    aws:
+        accesskey: ${AWS_ACCESS_KEY}
+        secretkey: ${AWS_SECRET_KEY}
+    dynamodb:
+        endpoint: ${DYNAMODB_URL}
+
+rabbitmq:   # AWS (switch to ActiveMQ)
+    host: ${MQ_HOST}
+    port: ${MQ_PORT}
+    username: ${MQ_USERNAME}
+    password: ${MQ_PASSWORD}
+
+frontend:
+    url: ${FRONTEND_URL}
+
+grpc:
+    server:
+        port: 9090
+
+    client:
+        #        # monolith, single server
+        #        grpc-server-message: # gRPC server name
+        #            address: 'static://127.0.0.1:9090'
+        #            enableKeepAlive: true
+        #            keepAliveWithoutCalls: true
+        #            negotiationType: plaintext
+        #
+        #        grpc-server-channel-mapping: # gRPC server name
+        #            address: 'static://127.0.0.1:9090'
+        #            enableKeepAlive: true
+        #            keepAliveWithoutCalls: true
+        #            negotiationType: plaintext
+        #
+        #        grpc-server-conversation: # gRPC server name
+        #            address: 'static://127.0.0.1:9090'
+        #            enableKeepAlive: true
+        #            keepAliveWithoutCalls: true
+        #            negotiationType: plaintext
+
+        # microservices
+        # find gRPC server by dns
+        # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
+        grpc-server-message: # gRPC server name
+            address: 'dns:///message-gRPC-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+
+        grpc-server-channel-mapping: # gRPC server name
+            address: 'dns:///channel-mapping-gRPC-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+
+        grpc-server-conversation: # gRPC server name
+            address: 'dns:///conversation-gRPC-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext

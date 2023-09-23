@@ -32,3 +32,12 @@ build/
 dependency-reduced-pom.xml
 out
 README.html
+
+# dev files
+TestAPIController.java
+
+# dev version yaml files
+application-dev*.yaml
+
+# credentials
+Secrets.yaml

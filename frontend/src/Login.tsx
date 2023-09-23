@@ -1,75 +1,143 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import { useState } from "react";
 
-import "./Login.css";
+// redux
+import { Navigate } from "react-router-dom";
+import { useAppSelector } from './redux/hooks';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL;
+// mui
+import { Box, Button, InputLabel, Link, Paper, Stack, TextField, Typography } from "@mui/material";
+
+// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = "http://localhost:8084";
 
 function Login() {
-  const [errorMessages, setErrorMessages] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [username, setUsername] = useState("");
+    const status = useAppSelector(state => state.login.status); // Redux
 
-  // post form by fetch api
-  // ref: https://stackoverflow.com/questions/46640024/how-do-i-post-form-data-with-fetch-api
-  const handleSubmit = async (event: React.FormEvent) => {
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
-    event.preventDefault();
 
-    let formData = new FormData();
-    formData.append('username', (document.getElementById("username") as HTMLInputElement).value);
-    formData.append('password', (document.getElementById("password") as HTMLInputElement).value);
+    const onSubmit = async (event) => {
+        event.preventDefault();
 
-    const res = await fetch(`${BACKEND_URL}/login`, {
-        method: "POST", 
-        body: formData,
-        credentials: "include"  // set cookie (session)
-    });
+        if (username.length == 0 || password.length == 0) {
+            setError(true);
+            setErrorMessage("username or password empty");
+            return;
+        } else if (!/^[A-Za-z0-9]+$/.test(username)) {
+            setError(true);
+            setErrorMessage("username must be alphanumeric");
+            return;
+        }
 
-    if (res.status == 200) {
-      // login success
-      setUsername((document.getElementById("username") as HTMLInputElement).value)
-      setIsSubmitted(true);
-      localStorage.setItem("login_expiration", String(Date.now()/1000 + 2*60*60)); // unit: sec
-      localStorage.setItem("username", (document.getElementById("username") as HTMLInputElement).value);
+        const res = await fetch(`${BACKEND_URL}/login`, {
+            method: "POST",
+            body: JSON.stringify({
+                username: username,
+                password: password,
+            }),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+            credentials: "include"  // set cookie (session)
 
-      await new Promise(r => setTimeout(r, 2000));
-      window.location.replace(`${FRONTEND_URL}`);  // redirect to main page
+        });
 
-    } else {
-      // Invalid username & password, or other errors
-      setErrorMessages("invalid username or password");
-    }
-  };
+        // login success
+        if (res.status == 200) {
+            setError(false);
+            setSuccess(true);
 
-  const renderForm = (
-    <div className="form">
-      <form onSubmit={handleSubmit}>
-        <div className="input-container">
-          <label>Username </label>
-          <input type="text" id="username" name="username" required />
-        </div>
-        <div className="input-container">
-          <label>Password </label>
-          <input type="password" id="password" name="password" required />
-        </div>
-        <div className="error"> {errorMessages} </div>
-        <div className="button-container">
-          <input type="submit" />
-        </div>
-      </form>
-    </div>
-  );
+            await new Promise(r => setTimeout(r, 2000));
+            window.location.replace("");  // redirect to main page
+        } else {
+            setError(true);
+            setErrorMessage("invalid username or password 😢");
+        }
+    };
 
-  return (
-    <div className="app">
-      <div className="login-form">
-        <div className="title">Sign In</div>
-        {isSubmitted ? <div> Welcome Back, {username} </div> : renderForm}
-      </div>
-    </div>
-  );
+
+    if (status == "init")
+        return (<></>);     // blank page during authentication (better user experience)
+    else if (status == "login")
+        return (<Navigate to="/" />);
+    else    // status == "logout"
+        return (
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+                <Paper elevation={8} sx={{ width: "220px", padding: "30px" }}>
+                    <Typography sx={{ fontSize: "24px", marginBottom: "20px", fontFamily: "serif" }}>
+                        Sign In
+                    </Typography>
+
+                    <Stack margin="0px 6px">
+                        <form onSubmit={onSubmit}>
+                            <InputLabel sx={{ color: "black", fontFamily: "serif" }}>Username</InputLabel>
+                            <TextField
+                                value={username}
+                                required
+                                type="text"
+                                onChange={(event) => setUsername(event.target.value)}
+                                size="small"
+                                sx={{ marginBottom: "10px", width: "100%" }}
+                                inputProps={{
+                                    style: {
+                                        fontSize: "14px",
+                                        height: "14px",
+                                    }
+                                }}
+                            />
+
+                            <InputLabel sx={{ color: "black", fontFamily: "serif" }}>Password</InputLabel>
+                            <TextField
+                                value={password}
+                                type="password"
+                                onChange={(event) => setPassword(event.target.value)}
+                                size="small"
+                                sx={{ marginBottom: "10px", width: "100%" }}
+                                inputProps={{
+                                    style: {
+                                        fontSize: "14px",
+                                        height: "14px",
+                                    }
+                                }}
+                            />
+
+                            {
+                                error &&
+                                <Typography sx={{ fontSize: "14px", color: "red", fontFamily: "serif" }}>
+                                    {errorMessage}
+                                </Typography>
+                            }
+
+                            {
+                                !success &&
+                                <div style={{ textAlign: "center" }}>
+                                    <Button variant="contained" type="submit" disableRipple disableElevation sx={{ width: "100px", background: "DodgerBlue", marginTop: "10px" }} onClick={onSubmit}>
+                                        Login
+                                    </Button>
+                                </div>
+                            }
+
+                            {
+                                success &&
+                                <Typography sx={{ fontSize: "14px", color: "black", marginBottom: "10px", fontFamily: "serif" }}>
+                                    {`Welcome back, ${username} 😇`}
+                                </Typography>
+                            }
+                        </form>
+
+                        {/* forget password */}
+                        <Link href="/accountrecovery" underline="none" sx={{ fontSize: "14px", textAlign: "center", marginTop: "20px" }} > forgot password? </Link>
+                        {/* register */}
+                        <Link href="/join" underline="none" sx={{ fontSize: "14px", textAlign: "center", marginTop: "10px" }}> create account </Link>
+
+                    </Stack>
+                </Paper>
+            </Box>
+        );
 }
 
 export default Login;

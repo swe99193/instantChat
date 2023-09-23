@@ -1,0 +1,50 @@
+plugins {
+    id 'java-library'
+    id 'com.google.protobuf' version "0.9.3"
+}
+
+repositories {
+    mavenCentral()
+}
+
+def grpcVersion = "1.56.+"
+def protobufVersion = "3.23.+"
+
+dependencies {
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    if (JavaVersion.current().isJava9Compatible()) {
+        // Workaround for @javax.annotation.Generated
+        // see: https://github.com/grpc/grpc-java/issues/3633
+        implementation 'jakarta.annotation:jakarta.annotation-api:1.3.5'
+    }
+}
+
+/*************** protobuf dependencies ***************************/
+// similar to the configuration posted on java gRPC repo
+// see README: https://github.com/grpc/grpc-java#generated-code
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+    clean {
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+
+    generateProtoTasks {
+        all().configureEach { task ->
+            // Here you can configure the task
+            task.plugins {
+                grpc {
+                    outputSubDir = 'grpcjava'
+                }
+            }
+        }
+    }
+
+}

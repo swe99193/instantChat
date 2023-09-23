@@ -1,39 +1,109 @@
-import React, { useRef, useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useEffect } from 'react';
+// import './App.css';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+
+// redux
+import { login, logout } from './features/login/loginSlice';
+import { useAppDispatch, useAppSelector } from './redux/hooks';
+
+// mui
+import { GlobalStyles } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+// components
+import { SnackbarProvider } from 'notistack';
+
 import ChatLayout from './ChatLayout';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import MainPage from './MainPage';
 import Login from './Login';
 import Logout from './Logout';
 import Register from './Register';
+import ProtectedRoute from './ProtectedRoute';
+import AccountRecovery from './AccountRecovery';
+
+// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = "http://localhost:8084";
+
+
+const theme = createTheme({
+
+});
+
 
 function App() {
-  // check login state
-  const expiration = localStorage.getItem("login_expiration");
-  var loggedin = true;
-  if (expiration == null || Number(expiration) < Date.now()/1000){    // login expiration must exist and still valid
-    loggedin = false;
-  }
+    const status = useAppSelector(state => state.login.status); // Redux
+    const dispatch = useAppDispatch(); // Redux
 
-  return(
-    <BrowserRouter>
-      <Routes>
-          <Route path="/" element={loggedin ? <MainPage/>: <Navigate to="/login"/>}/>
-          {/* <Route path='/login' Component={() => {
-                window.location.replace('http://localhost:8080/login');   // backend login page
-                return null;
-            }}/> */}
-          <Route path='/login' element={loggedin ? <Navigate to="/"/>: <Login/>}/>
-          <Route path='/logout' element={<Logout/>}/>
-          <Route path='/register' element={<Register/>}/>
 
-        <Route path="/chat" >
-          <Route index element={loggedin ? <ChatLayout/>: <Navigate to="/login"/>}/>
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+    /**
+     * check session status
+     */
+    const auth = async () => {
+        console.log("🟢 App rendered")
+
+        const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
+        const userId = await res.text();
+
+        if (res.status == 200 && userId != "") {
+            dispatch(login(userId)); // update Redux
+        } else {
+            dispatch(logout()); // update Redux
+        }
+
+        console.log(userId);
+    }
+
+    useEffect(() => {
+        auth();
+    }, []);
+
+    return (
+        <ThemeProvider theme={theme}>
+
+            {/* global css*/}
+            <GlobalStyles styles={{
+                // scrollbar
+                '*::-webkit-scrollbar': {
+                    width: '8px'
+                },
+                '*::-webkit-scrollbar-track': {
+
+                },
+                '*::-webkit-scrollbar-thumb': {
+                    backgroundColor: '#DCDCDC',
+                    borderRadius: "20px"
+                },
+                height: "100vh",
+                overflow: "scroll"
+            }} />
+
+            <BrowserRouter>
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <ProtectedRoute>
+                                <SnackbarProvider
+                                    style={{
+                                        // snackbar width
+                                        minWidth: "0px",
+                                        width: "180px",
+
+                                    }}
+                                >
+                                    <ChatLayout />
+                                </SnackbarProvider>
+                            </ProtectedRoute>
+                        }
+
+                    />
+                    <Route path='/login' element={<Login />} />
+                    <Route path='/logout' element={<Logout />} />
+                    <Route path='/join' element={<Register />} />
+                    <Route path='/accountrecovery' element={<AccountRecovery />} />
+                </Routes>
+            </BrowserRouter>
+        </ThemeProvider>
+    );
 }
 
 export default App;

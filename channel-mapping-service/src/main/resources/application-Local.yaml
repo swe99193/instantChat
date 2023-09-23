@@ -1,0 +1,66 @@
+spring:
+    datasource:
+        username: postgres
+        password: postgres
+        url: jdbc:postgresql://localhost:8050/InstantChat
+    jpa:
+        hibernate:
+            ddl-auto: update
+
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: localhost # local
+            port: 6379
+
+server:
+    port: 8081
+
+    servlet:
+        session:
+            timeout: 360000  # session timeout, 100 hrs
+
+amazon:
+    aws:
+        accesskey: ${AWS_ACCESS_KEY}
+        secretkey: ${AWS_SECRET_KEY}
+    dynamodb:
+        endpoint: ${DYNAMODB_URL}
+
+rabbitmq:
+    host: localhost
+    port: 61613
+    username: guest
+    password: guest
+
+frontend:
+    url: http://localhost:3000
+
+grpc:
+    server:
+        port: 9091
+
+    client:
+        grpc-server-message: # gRPC server name
+            address: 'static://127.0.0.1:9093'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+
+        grpc-server-channel-mapping: # gRPC server name
+            address: 'static://127.0.0.1:9091'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+
+        grpc-server-conversation: # gRPC server name
+            address: 'static://127.0.0.1:9092'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
