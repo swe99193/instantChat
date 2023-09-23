@@ -194,6 +194,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
 
         // reach the earliest message
         if (messageList.length < pageSize) {
+            var isTop = true;
             setIsTop(true);
         }
 
@@ -225,7 +226,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                 timestamp: item.timestamp,
                 direction: (item.sender == currentUserId) ? "out" : "in",
                 receiver: receiver,
-                isHeadMessage: index == 0 || isHeadMessage(messageList[index - 1].timestamp, messageList[index].timestamp),     // set divider flag
+                isHeadMessage: index == 0 ? isTop : isHeadMessage(messageList[index - 1].timestamp, messageList[index].timestamp),     // set divider flag
             } as Message;
         });
 
