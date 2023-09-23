@@ -61,7 +61,7 @@ public class ChatService {
         messageService.saveMessage(message);
     }
 
-    public List<Message> listMessage(String sender, String receiver){
+    public List<Message> listMessage(String sender, String receiver, Long timestamp, Integer pageSize){
 
 //        String channel_id = channelMappingService.findChannelId(sender, receiver);
 
@@ -70,13 +70,15 @@ public class ChatService {
         findChannelIdResponse _res = channelMappingService.findChannelId(_req);
         String channelId = _res.getChannelId();
 
-        List<Message> messageList = messageService.listMessage(channelId);
+        List<Message> messageList = messageService.listMessage(channelId, timestamp, pageSize);
 
         return messageList;
     }
 
     /**
      * upload to S3
+     * <p>
+     * filename format: file-message/(channel id)/(random UUID)_(original filename)
      */
     public String saveFile(String sender, String receiver, MultipartFile file) throws IOException {
 //        String channel_id = channelMappingService.findChannelId(sender, receiver);
@@ -86,8 +88,10 @@ public class ChatService {
         findChannelIdResponse _res = channelMappingService.findChannelId(_req);
         String channelId = _res.getChannelId();
 
-        // filename format: <channel id>_<random UUID>_<original filename>
-        String objectName = String.format("%s_%s_%s", channelId, UUID.randomUUID().toString(), file.getOriginalFilename());
+
+        //  filename format: file-message/<channel id>/<random UUID>_<original filename>
+        String objectName = String.format("file-message/%s/%s_%s", channelId, UUID.randomUUID().toString(), file.getOriginalFilename());
+
 
         Region region = Region.US_EAST_1;
         S3Client s3 = S3Client.builder()
@@ -118,9 +122,11 @@ public class ChatService {
         findChannelIdResponse _res = channelMappingService.findChannelId(_req);
         String channelId = _res.getChannelId();
 
-        // check if file belongs to current channel by prefix of filename, i.e., channelId
-        if(!channelId.equals(objectName.split("_")[0]))
+
+        // check if file belongs to current channel by filename
+        if(!channelId.equals(objectName.split("/")[1]))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
 
         //  download from S3
         Region region = Region.US_EAST_1;

@@ -65,9 +65,9 @@ public class ChatController {
 	}
 
 	@GetMapping("/message")
-	public List<Message> listMessage(@RequestParam String receiver, Principal principal){
+	public List<Message> listMessage(@RequestParam String receiver, @RequestParam Long timestamp, @RequestParam Integer pageSize, Principal principal){
 
-		return chatService.listMessage(principal.getName(), receiver);
+		return chatService.listMessage(principal.getName(), receiver, timestamp, pageSize);
 	}
 
 	@PostMapping("/private-message/file")

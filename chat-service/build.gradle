@@ -27,8 +27,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	// DynamoDB
-	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.490'
-	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
+	implementation 'software.amazon.awssdk:dynamodb:2.20.147'
 
 	// S3
 	implementation 'software.amazon.awssdk:s3:2.20.135'
