@@ -1,29 +1,28 @@
-package com.application.registration;
+package com.application.recovery;
 
 import com.application.user.User;
 import com.application.user.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RegisterService {
+public class RecoveryService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public RegisterService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public RecoveryService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    /**
-     * INSERT user into database
-     */
-    public User save(String username, String password) {
+    @Transactional
+    public void resetPassword(String username, String password) {
         // password should be encoded in database
         String encodedPassword = bCryptPasswordEncoder
                 .encode(password);
-        return userRepository.save(new User(username, encodedPassword));
+        userRepository.updatePassword(username, encodedPassword);
     }
 }

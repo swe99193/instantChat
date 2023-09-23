@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -24,7 +25,7 @@ import java.util.Collections;
 // Note: follow spring boot 3.0.0 standard
 // see: https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 public class WebSecurityConfig{
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -37,12 +38,12 @@ public class WebSecurityConfig{
                 .authorizeRequests()
             // allow these routes to be accessed without authentication
 //                .requestMatchers("/**")   // match any routes
-                .requestMatchers("/register", "/test/**", "/login", "/auth/**")
+                .requestMatchers( "/register", "accountrecovery", "/test/**", "/login", "/auth/**")
                 .permitAll()
-                .and()
-                .authorizeRequests()
-                .anyRequest()
-                .authenticated()
+//                .and()
+//                .authorizeRequests()
+//                .anyRequest()
+//                .authenticated()
                 .and()
                 .formLogin()
                 .disable()      // avoid it overrides custom login api
