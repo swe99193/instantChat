@@ -12,14 +12,16 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 // components
 import { SnackbarProvider } from 'notistack';
+
 import ChatLayout from './ChatLayout';
 import Login from './Login';
 import Logout from './Logout';
 import Register from './Register';
 import ProtectedRoute from './ProtectedRoute';
+import AccountRecovery from './AccountRecovery';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
+// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = "http://localhost:8084";
 
 
 const theme = createTheme({
@@ -38,8 +40,7 @@ function App() {
     const auth = async () => {
         console.log("🟢 App rendered")
 
-        // const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
-        const res = await fetch(`http://localhost:8084/auth`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/auth`, { credentials: "include" });
         const userId = await res.text();
 
         if (res.status == 200 && userId != "") {
@@ -95,13 +96,10 @@ function App() {
                         }
 
                     />
-                    {/* <Route path='/login' Component={() => {
-                window.location.replace('http://localhost:8080/login');   // backend login page
-                return null;
-            }}/> */}
                     <Route path='/login' element={<Login />} />
                     <Route path='/logout' element={<Logout />} />
-                    <Route path='/register' element={<Register />} />
+                    <Route path='/join' element={<Register />} />
+                    <Route path='/accountrecovery' element={<AccountRecovery />} />
                 </Routes>
             </BrowserRouter>
         </ThemeProvider>

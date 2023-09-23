@@ -8,8 +8,7 @@ import { Box, Button, InputLabel, Link, Paper, Stack, TextField, Typography } fr
 // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BACKEND_URL = "http://localhost:8084";
 
-
-function Register() {
+function AccountRecovery() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(false);
     const [username, setUsername] = useState("");
@@ -20,7 +19,6 @@ function Register() {
     const onSubmit = async (event) => {
         event.preventDefault();
 
-        // check input format
         if (username.length == 0 || password.length == 0) {
             setError(true);
             setErrorMessage("username or password empty");
@@ -36,8 +34,8 @@ function Register() {
         formData.append('username', username);
         formData.append('password', password);
 
-        const res = await fetch(`${BACKEND_URL}/register`, {
-            method: "POST",
+        const res = await fetch(`${BACKEND_URL}/accountrecovery`, {
+            method: "PUT",
             body: formData,
             credentials: "include"
         });
@@ -49,9 +47,9 @@ function Register() {
 
             await new Promise(r => setTimeout(r, 2000));
             window.location.replace("/login");
-        } else if (res.status == 409) {
+        } else if (res.status == 404) {
             setError(true);
-            setErrorMessage("Username already exists 😢");
+            setErrorMessage("Username does not exist 😢");
         } else {
             setError(true);
             setErrorMessage("Something went wrong 😢");
@@ -62,7 +60,7 @@ function Register() {
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
             <Paper elevation={8} sx={{ width: "220px", padding: "30px" }}>
                 <Typography sx={{ fontSize: "24px", marginBottom: "20px", fontFamily: "serif" }}>
-                    Sign Up
+                    Set new password
                 </Typography>
 
                 <Stack margin="0px 6px">
@@ -109,7 +107,7 @@ function Register() {
                             !success &&
                             <div style={{ textAlign: "center" }}>
                                 <Button variant="contained" type="submit" disableRipple disableElevation sx={{ width: "100px", background: "DodgerBlue", marginTop: "10px" }} onClick={onSubmit}>
-                                    Sign Up
+                                    Submit
                                 </Button>
                             </div>
                         }
@@ -117,7 +115,7 @@ function Register() {
                         {
                             success &&
                             <Typography sx={{ fontSize: "14px", color: "black", marginBottom: "10px", fontFamily: "serif" }}>
-                                {`Register success 😇`}
+                                {`Password reset 😇`}
                             </Typography>
                         }
                     </form>
@@ -131,4 +129,4 @@ function Register() {
     );
 }
 
-export default Register;
+export default AccountRecovery;
