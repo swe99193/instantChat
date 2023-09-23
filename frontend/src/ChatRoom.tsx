@@ -34,6 +34,7 @@ function ChatRoom({ stompClient, receiver }: props) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [initState, setInitState] = useState(true); // disable text send
     const [fileDisabled, setFileDisabled] = useState(true); // disable file upload
+    const [lockInput, setLockInput] = useState(false); // prevent send during composition event 
     const chatRoomRef = useRef(null);
 
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
@@ -57,6 +58,11 @@ function ChatRoom({ stompClient, receiver }: props) {
     };
 
     const onEnter = (event) => {
+        // check composition event
+        if (lockInput)
+            return;
+
+        // check "Shift + Enter" (add new line) and empty input
         if (!event.shiftKey && event.key == "Enter" && messageInput) {
             if (messageInput.length > 10000) {
                 alert("🔴 Text size too large");
@@ -250,6 +256,7 @@ function ChatRoom({ stompClient, receiver }: props) {
     useEffect(() => {
         setInitState(true);  // disable input
         setFileDisabled(true);  // disable input
+        setLockInput(false); // reset
         setMessages([]);  // clear message
         setMessageInput(""); // clear input bar
         listMessage();
@@ -393,6 +400,8 @@ function ChatRoom({ stompClient, receiver }: props) {
                         value={messageInput}
                         onChange={(event) => { if (event.target.value != "\n") setMessageInput(event.target.value) }}   // skip initial Enter key
                         onKeyDown={onEnter}
+                        onCompositionStart={() => setLockInput(true)}
+                        onCompositionEnd={() => setLockInput(false)}
                         inputRef={input => input && input.focus()}      // note: mui autofocus not working
                         size="small"
                         autoComplete="off"
