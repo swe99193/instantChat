@@ -38,8 +38,6 @@ public class WebSecurityConfig{
                 .authorizeRequests()
             // allow these routes to be accessed without authentication
 //                .requestMatchers("/**")   // match any routes
-                .requestMatchers("/register", "/test/**", "/login", "/auth/**")
-                .permitAll()
                 .and()
                 .authorizeRequests()
                 .anyRequest()
