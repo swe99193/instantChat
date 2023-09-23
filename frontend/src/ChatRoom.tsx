@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-
-import Stomp from 'stompjs';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAppSelector } from './redux/hooks';
+import Stomp from 'stompjs';
 
 // mui
-import { AppBar, Avatar, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
+import { AppBar, Avatar, CircularProgress, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
 import { Stack } from '@mui/system';
 
 // mui icons
@@ -19,23 +18,41 @@ import { Message } from './types/Message.types';
 // notification stack
 import { useSnackbar } from 'notistack';
 
+import { imageExtension } from './shared/supportedFileExtension';
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL_1 = "http://localhost:8084";
+const pageSize = 20;
 
-const image_extension = ["jpeg", "jpg", "gif", "png",];
+type LayoutState = "init" | "fetch" | "send";
 
 interface props {
     stompClient: Stomp.Client;
     receiver: string;
+    profilePictureUrl: string;
 }
 
-function ChatRoom({ stompClient, receiver }: props) {
+const isHeadMessage = (t1: number, t2: number) => {
+    const D1 = new Date(t1);
+    const D2 = new Date(t2);
+    // console.log(D2.toLocaleDateString());   // ex: 8/17/2023
+
+    return !(D1.toLocaleDateString() == D2.toLocaleDateString());
+}
+
+
+function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
     const [messageInput, setMessageInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
-    const [initState, setInitState] = useState(true); // disable text send
+    const [layoutState, setLayoutState] = useState<LayoutState>("init"); //  controll initial rendering & scroll adjusment
     const [fileDisabled, setFileDisabled] = useState(true); // disable file upload
     const [lockInput, setLockInput] = useState(false); // prevent send during composition event 
+    const [isTop, setIsTop] = useState(false); // if the earliest message is reached
+    const [lockFetch, setLockFetch] = useState(false); // prevent repetitive fetching
     const chatRoomRef = useRef(null);
+
+    const [statusMessage, setStatusMessage] = useState("");
 
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
@@ -47,13 +64,15 @@ function ChatRoom({ stompClient, receiver }: props) {
     const [scrollTop, setScrollTop] = useState(1000);
 
 
-    const handleSend = (message: string) => (event) => {
+    const handleSendClick = (message: string) => (event) => {
         if (message.length > 10000) {
             alert("🔴 Text size too large");
             return;
         }
 
         setMessageInput(""); // set input to empty
+        setLayoutState("send");
+
         stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: message }));
     };
 
@@ -70,6 +89,8 @@ function ChatRoom({ stompClient, receiver }: props) {
             }
 
             setMessageInput(""); // set input to empty
+            setLayoutState("send");
+
             stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: messageInput }));
         }
     };
@@ -84,8 +105,12 @@ function ChatRoom({ stompClient, receiver }: props) {
                 var file_type = _filename[_filename.length - 1].toLowerCase();
 
             // fetch image
-            if (image_extension.includes(file_type)) {
-                const res = await fetch(`${BACKEND_URL}/message/file?filename=${message.content}&receiver=${receiver}`, { credentials: "include" });
+            if (imageExtension.includes(file_type)) {
+                const params = new URLSearchParams({
+                    filename: message.content,
+                    receiver: receiver,
+                });
+                const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
                 var fileBlob = await res.blob();
                 var object_url = URL.createObjectURL(fileBlob);
             }
@@ -93,14 +118,13 @@ function ChatRoom({ stompClient, receiver }: props) {
 
         // take the data from argument instead of state variable
         setMessages(messages => [...messages, {
-            content: image_extension.includes(file_type) ? object_url : message.content,
-            contentType: image_extension.includes(file_type) ? "image" : message.contentType,
-            filename: message.content.substring(74),    // skip channel_id & random uuid
+            content: imageExtension.includes(file_type) ? object_url : message.content,
+            contentType: imageExtension.includes(file_type) ? "image" : message.contentType,
+            filename: (message.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
             fileSize: message.fileSize,
             timestamp: message.timestamp,
             direction: "out",
             receiver: receiver,
-            profilePictureUrl: "https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537",
             isHeadMessage: messages.length == 0 || isHeadMessage(messages[messages.length - 1].timestamp, message.timestamp),     // set divider flag
         }]);
     };
@@ -113,8 +137,12 @@ function ChatRoom({ stompClient, receiver }: props) {
                 var file_type = _filename[_filename.length - 1].toLowerCase();
 
             // fetch image
-            if (image_extension.includes(file_type)) {
-                const res = await fetch(`${BACKEND_URL}/message/file?filename=${message.content}&receiver=${receiver}`, { credentials: "include" });
+            if (imageExtension.includes(file_type)) {
+                const params = new URLSearchParams({
+                    filename: message.content,
+                    receiver: receiver,
+                });
+                const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
                 var fileBlob = await res.blob();
                 var object_url = URL.createObjectURL(fileBlob);
             }
@@ -122,35 +150,55 @@ function ChatRoom({ stompClient, receiver }: props) {
 
         // take the data from argument instead of state variable
         setMessages(messages => [...messages, {
-            content: image_extension.includes(file_type) ? object_url : message.content,
-            contentType: image_extension.includes(file_type) ? "image" : message.contentType,
-            filename: message.content.substring(74),    // skip channel_id & random uuid
+            content: imageExtension.includes(file_type) ? object_url : message.content,
+            contentType: imageExtension.includes(file_type) ? "image" : message.contentType,
+            filename: (message.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
             fileSize: message.fileSize,
             timestamp: message.timestamp,
             direction: "in",
             receiver: receiver,
-            profilePictureUrl: "https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537",
             isHeadMessage: messages.length == 0 || isHeadMessage(messages[messages.length - 1].timestamp, message.timestamp),     // set divider flag
         }]);
     };
 
 
-    const isHeadMessage = (t1: number, t2: number) => {
-        const D1 = new Date(t1);
-        const D2 = new Date(t2);
-        // console.log(D2.toLocaleDateString());   // ex: 8/17/2023
+    const getStatusMessage = async (username: string) => {
+        const params = new URLSearchParams({
+            username: username,
+        });
+        const res = await fetch(`${BACKEND_URL_1}/user-data?${params}`, { credentials: "include" });
 
-        return !(D1.toLocaleDateString() == D2.toLocaleDateString());   // not the same date
+        setStatusMessage((await res.json()).statusMessage);
     }
 
 
-    const listMessage = async () => {
+    /**
+     * Fetch messages based on timestamp and page size. 
+     * 
+     * @param receiver Fetch messages with this username. 
+     * @param timestamp Fetch messagew before this timestamp. 
+     * @param pageSize The number of query rows. 
+     */
+    const fetchMessage = async (receiver: string, timestamp: number, pageSize: number) => {
+        setLockFetch(true);
 
-        const response = await fetch(`${BACKEND_URL}/message?receiver=${receiver}`, { credentials: "include" });
+        const params = new URLSearchParams({
+            receiver: receiver,
+            timestamp: timestamp.toString(),
+            pageSize: pageSize.toString(),
+        });
+
+        const response = await fetch(`${BACKEND_URL}/message?${params}`, { credentials: "include" });
         let messageList: Message[] = await response.json();
         // console.log(messageList);
 
-        const arr = messageList.map(async (item, index) => {
+        // reach the earliest message
+        if (messageList.length < pageSize) {
+            setIsTop(true);
+        }
+
+        // response is in descending order (newest message first), need to reverse array
+        const arrPromise = messageList.reverse().map(async (item, index) => {
             if (item.contentType == "file") {
 
                 var _filename = item.content.split(".");
@@ -158,35 +206,41 @@ function ChatRoom({ stompClient, receiver }: props) {
                     var file_type = _filename[_filename.length - 1].toLowerCase();
 
                 // fetch image
-                if (image_extension.includes(file_type)) {
-                    const res = await fetch(`${BACKEND_URL}/message/file?filename=${item.content}&receiver=${receiver}`, { credentials: "include" });
+                if (imageExtension.includes(file_type)) {
+                    const params = new URLSearchParams({
+                        filename: item.content,
+                        receiver: receiver,
+                    });
+                    const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
                     var fileBlob = await res.blob();
                     var object_url = URL.createObjectURL(fileBlob);
                 }
             }
 
             return {
-                content: image_extension.includes(file_type) ? object_url : item.content,
-                contentType: image_extension.includes(file_type) ? "image" : item.contentType,
-                filename: item.content.substring(74),    // skip channel_id & random uuid
+                content: imageExtension.includes(file_type) ? object_url : item.content,
+                contentType: imageExtension.includes(file_type) ? "image" : item.contentType,
+                filename: (item.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
                 fileSize: item.fileSize,
                 timestamp: item.timestamp,
                 direction: (item.sender == currentUserId) ? "out" : "in",
                 receiver: receiver,
-                profilePictureUrl: "https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537",
                 isHeadMessage: index == 0 || isHeadMessage(messageList[index - 1].timestamp, messageList[index].timestamp),     // set divider flag
             } as Message;
         });
 
-        setMessages(await Promise.all(arr));
+        const arr = await Promise.all(arrPromise);
 
-        setInitState(false);  // allow text input
+        setMessages(_list => arr.concat(_list));
+
+        setLayoutState("fetch");  // allow text input
         setFileDisabled(false);  // allow file upload
+        setLockFetch(false);
     };
 
 
     /**
-     * synchronize the current scroll position
+     * Synchronize the current scroll position. 
      * 
      * Note:
      *  zoom in/out might also trigger this event
@@ -194,6 +248,12 @@ function ChatRoom({ stompClient, receiver }: props) {
     const chatOnScroll = () => {
         // update current height
         setScrollTop(x => chatRoomRef.current.scrollTop);
+
+        // fetch new messages if scoll to top
+        // skip if fetch locked, or still in initial state, or reached top
+        if (!lockFetch && layoutState != "init" && !isTop && chatRoomRef.current.scrollTop == 0) {
+            fetchMessage(receiver, messages[0].timestamp, pageSize);
+        }
 
         // console.log(chatRoomRef.current.scrollTop);
         // console.log(chatRoomRef.current.scrollHeight);
@@ -231,11 +291,16 @@ function ChatRoom({ stompClient, receiver }: props) {
         data.append("contentType", "file");
         data.append("file", file);
 
-        setFileDisabled(true); // disable temporarily
+        setFileDisabled(true);
         const snackbarId = enqueueSnackbar('Upload pending', { variant: "info", autoHideDuration: 3000 });
 
+
         // send files by POST 
-        const res = await fetch(`${BACKEND_URL}/private-message/file?receiver=${receiver}`, {
+        const params = new URLSearchParams({
+            receiver: receiver,
+        });
+
+        const res = await fetch(`${BACKEND_URL}/private-message/file?${params}`, {
             method: "POST",
             credentials: "include",
             body: data,
@@ -254,12 +319,16 @@ function ChatRoom({ stompClient, receiver }: props) {
 
 
     useEffect(() => {
-        setInitState(true);  // disable input
+        setLayoutState("init");  // disable input
         setFileDisabled(true);  // disable input
         setLockInput(false); // reset
+        setIsTop(false);    // reset
+        setLockFetch(false);    // reset
         setMessages([]);  // clear message
         setMessageInput(""); // clear input bar
-        listMessage();
+        setStatusMessage(""); // clear status messaage
+        getStatusMessage(receiver);
+        fetchMessage(receiver, Number.MAX_SAFE_INTEGER, pageSize);
         const { receiveSub, echoSub } = subscribeQueue();
 
         return function cleanup() {
@@ -271,30 +340,33 @@ function ChatRoom({ stompClient, receiver }: props) {
     }, [receiver]); // re-render when receiver change
 
 
-    useEffect(() => {
-        // update total height
-        setScrollHeight(chatRoomRef.current.scrollHeight)
+    // adjust scroll position BEFORE rendering
+    // see useLayoutEffect: https://react.dev/reference/react/useLayoutEffect
+    useLayoutEffect(() => {
+
+        // console.log("❌ " + chatRoomRef.current.scrollHeight)   // DEBUG
 
         setTimeout(() => {
+            // wait for calculation of total height including images' height
+            // console.log("✅ " + chatRoomRef.current.scrollHeight)   // DEBUG
+
+            // update total height
+            setScrollHeight(chatRoomRef.current.scrollHeight);
+        }, 5);
+
+        if (layoutState == "init" || layoutState == "send") {
             // scroll to bottom
-            chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight
-        }, 10); // wait for image rendering to get the correct scrollHeight
+            chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight;
+        } else {
+            // stay at the same view after new messages are fetched
+            chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight - scrollHeight;    // current - previous height
+        }
 
-        // TODO?: control scroll position
-
-        // if (scrollHeight) {
-        // elementRef.current.scrollTop = 1000;
-        // const scrollingElement = document.scrollingElement;
-        // scrollingElement.scrollTop = 0;
-        // window.scrollTo({ top: 2000 });
-        // console.log(scrollingElement.scrollHeight);
-        // elementRef.current.scrollIntoView();
-        // }
-    }, [messages]);
+    }, [layoutState, messages]);
 
 
     return (
-        <div style={{ display: "flex", flexGrow: 1, flexDirection: "column", minWidth: 0 }}>
+        <div style={{ display: "flex", width: "100%", flexDirection: "column", minWidth: 0 }}>
             {/* note: adding overflow at this layer will cause the app bar to be scrollable */}
 
             {/* top bar */}
@@ -310,11 +382,12 @@ function ChatRoom({ stompClient, receiver }: props) {
                         alignItems: "center"
                     }}
                 >
+                    {/* TODO: online status */}
                     <Avatar
                         sx={{
                             margin: "0px",
                         }}
-                        src="https://external-preview.redd.it/1mF2BkbuRUyI5Od8V7aTZDVS_Y8-GMWeT4zvv7e_IrI.jpg?auto=webp&s=6dd561c5c1c1d69de69a56c8afaf4d5e3269d537"
+                        src={profilePictureUrl}
                     />
 
                     <Stack direction="column">
@@ -333,7 +406,7 @@ function ChatRoom({ stompClient, receiver }: props) {
                                 fontSize: "12px"
                             }}
                         >
-                            Good Luck!
+                            {statusMessage}
                         </Typography>
                     </Stack>
                 </Toolbar>
@@ -341,19 +414,32 @@ function ChatRoom({ stompClient, receiver }: props) {
 
             {/* chat room */}
             <div onScroll={chatOnScroll} ref={chatRoomRef} style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "auto" }}>
+
                 {
-                    initState ?
+                    layoutState == "init" ?
                         <Skeleton variant="rectangular" animation="wave" height="100%" />   // loading placeholder
                         :
-                        <List
-                            sx={{
-                                padding: "10px"
-                            }}
-                        >
+                        <>
                             {
-                                messages.map((item, index) => <MessageItem item={item} />)
+                                !isTop &&
+                                <div style={{ display: "flex", minHeight: "40px", justifyContent: "center", alignItems: "center" }}>
+                                    {
+                                        lockFetch &&
+                                        <CircularProgress color="secondary" size="25px" />
+                                    }
+                                </div>
                             }
-                        </List>
+
+                            <List
+                                sx={{
+                                    padding: "10px"
+                                }}
+                            >
+                                {
+                                    messages.map((item, index) => <MessageItem item={item} />)
+                                }
+                            </List>
+                        </>
                 }
             </div>
 
@@ -381,7 +467,7 @@ function ChatRoom({ stompClient, receiver }: props) {
                         aria-label="send"
                         disableRipple
                         sx={{
-                            color: "#1E90FF",    // blue
+                            color: "DodgerBlue",    // blue
                             "&.Mui-disabled": {
                                 // color: "grey",
                             },
@@ -439,12 +525,12 @@ function ChatRoom({ stompClient, receiver }: props) {
 
                     {/* send button */}
                     <IconButton
-                        disabled={initState || messageInput.length == 0}
+                        disabled={layoutState == "init" || messageInput.length == 0}
                         aria-label="send"
                         disableRipple
-                        onClick={handleSend(messageInput)}
+                        onClick={handleSendClick(messageInput)}
                         sx={{
-                            color: "#1E90FF",    // blue
+                            color: "DodgerBlue",    // blue
                             "&.Mui-disabled": {
                                 // color: "grey",
                             },

@@ -36,8 +36,13 @@ function MessageItem({ item }: props) {
         setDownloadDisabled(true);
         const snackbarId = enqueueSnackbar('Download pending', { variant: "info", autoHideDuration: 3000 });
 
+        const params = new URLSearchParams({
+            filename: item.content,
+            receiver: item.receiver,
+        });
+
         // download file
-        const res = await fetch(`${BACKEND_URL}/message/file?filename=${item.content}&receiver=${item.receiver}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
         var fileBlob = await res.blob();
         var object_url = URL.createObjectURL(fileBlob);
 
