@@ -42,7 +42,7 @@ function MessageItem({ item }: props) {
         });
 
         // download file
-        const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
         var fileBlob = await res.blob();
         var object_url = URL.createObjectURL(fileBlob);
 
