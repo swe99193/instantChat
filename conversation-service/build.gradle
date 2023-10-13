@@ -25,8 +25,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	// DynamoDB
-	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.490'
-	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
+	implementation 'software.amazon.awssdk:dynamodb:2.20.147'
 
 	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
