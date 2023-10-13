@@ -34,7 +34,7 @@ function ChatLayout() {
     const [receiver, setReceiver] = useState("");   // receiver of active conversation
     const [profilePictureUrl, setProfilePictureUrl] = useState(""); // object url of active conversation, passed to children components
 
-    const stompClient = useRef<Stomp.Client>(Stomp.client(`ws://${WEBSOCKET_ENDPOINT}/gs-guide-websocket`));
+    const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
 
     // drawer
