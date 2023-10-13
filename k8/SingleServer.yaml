@@ -1,0 +1,103 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: instantchat-app
+  namespace: default # specify namespace
+  labels:   # note: used by Service spec.selector
+    app: instantchat-app
+spec:
+  containers:
+    - name: instantchat-app
+      image: swe99193/instantchat:latest
+      ports:
+      - containerPort: 8080
+      env:
+      - name: PG_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: PG_USERNAME
+      - name: PG_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: PG_PASSWORD
+      - name: PG_URL
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: PG_URL
+      - name: AWS_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: AWS_ACCESS_KEY
+      - name: AWS_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: AWS_SECRET_KEY
+      - name: DYNAMODB_URL
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: DYNAMODB_URL
+      - name: REDIS_URL
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: REDIS_URL
+      - name: MQ_HOST
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: MQ_HOST
+      - name: MQ_PORT
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: MQ_PORT
+      - name: MQ_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: MQ_USERNAME
+      - name: MQ_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: instantchat-secret
+            key: MQ_PASSWORD
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: instantchat-service
+  namespace: default
+spec:
+  selector:
+    app: instantchat-app
+  type: NodePort  # proxy for exposing the service to the external
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+      nodePort: 30030
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  namespace: default
+spec:
+  rules:
+    - host: "instantchat.com"
+      http:
+        paths:
+        # Monolith
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: instantchat-service
+                port:
+                  number: 8080
