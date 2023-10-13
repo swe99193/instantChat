@@ -1,0 +1,490 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: account-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: account-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: account-app
+    spec:
+      containers:
+        - name: account-app
+          image: swe99193/account-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: MQ_HOST
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_HOST
+          - name: MQ_PORT
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PORT
+          - name: MQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_USERNAME
+          - name: MQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PASSWORD
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: channel-mapping-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: channel-mapping-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: channel-mapping-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: channel-mapping-app
+    spec:
+      containers:
+        - name: channel-mapping-app
+          image: swe99193/channel-mapping-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: MQ_HOST
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_HOST
+          - name: MQ_PORT
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PORT
+          - name: MQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_USERNAME
+          - name: MQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PASSWORD
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: chat-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chat-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: chat-app
+    spec:
+      containers:
+        - name: chat-app
+          image: swe99193/chat-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: MQ_HOST
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_HOST
+          - name: MQ_PORT
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PORT
+          - name: MQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_USERNAME
+          - name: MQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PASSWORD
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conversation-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: conversation-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: conversation-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: conversation-app
+    spec:
+      containers:
+        - name: conversation-app
+          image: swe99193/conversation-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: MQ_HOST
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_HOST
+          - name: MQ_PORT
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PORT
+          - name: MQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_USERNAME
+          - name: MQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: MQ_PASSWORD
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: account-service
+  namespace: default
+spec:
+  selector:
+    app: account-app
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: channel-mapping-service
+  namespace: default
+spec:
+  selector:
+    app: channel-mapping-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: chat-service
+  namespace: default
+spec:
+  selector:
+    app: chat-app
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: conversation-service
+  namespace: default
+spec:
+  selector:
+    app: conversation-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: instantchat-ingress
+  namespace: default
+
+spec:
+  rules:
+    - host: instantchat.com
+      http:
+        paths:
+        # Microservices
+          - pathType: Prefix
+            path: /auth
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /login
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /logout
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /user
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /register
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /accountrecovery
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /user-data
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /chat
+            backend:
+              service:
+                name: chat-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /websocket
+            backend:
+              service:
+                name: chat-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /conversation
+            backend:
+              service:
+                name: conversation-service
+                port:
+                  number: 8080
