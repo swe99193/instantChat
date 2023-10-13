@@ -22,7 +22,7 @@ import { imageExtension } from './shared/supportedFileExtension';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL_1 = "http://localhost:8084";
+// const BACKEND_URL_1 = "http://localhost:8084";  // for local testing
 const pageSize = 20;
 
 type LayoutState = "init" | "fetch" | "send";
@@ -110,7 +110,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                     filename: message.content,
                     receiver: receiver,
                 });
-                const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
+                const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
                 var fileBlob = await res.blob();
                 var object_url = URL.createObjectURL(fileBlob);
             }
@@ -142,7 +142,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                     filename: message.content,
                     receiver: receiver,
                 });
-                const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
+                const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
                 var fileBlob = await res.blob();
                 var object_url = URL.createObjectURL(fileBlob);
             }
@@ -166,7 +166,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         const params = new URLSearchParams({
             username: username,
         });
-        const res = await fetch(`${BACKEND_URL_1}/user-data?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include" });
 
         setStatusMessage((await res.json()).statusMessage);
     }
@@ -188,7 +188,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             pageSize: pageSize.toString(),
         });
 
-        const response = await fetch(`${BACKEND_URL}/message?${params}`, { credentials: "include" });
+        const response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include" });
         let messageList: Message[] = await response.json();
         // console.log(messageList);
 
@@ -212,7 +212,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                         filename: item.content,
                         receiver: receiver,
                     });
-                    const res = await fetch(`${BACKEND_URL}/message/file?${params}`, { credentials: "include" });
+                    const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
                     var fileBlob = await res.blob();
                     var object_url = URL.createObjectURL(fileBlob);
                 }
@@ -301,7 +301,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             receiver: receiver,
         });
 
-        const res = await fetch(`${BACKEND_URL}/private-message/file?${params}`, {
+        const res = await fetch(`${BACKEND_URL}/chat/private-message/file?${params}`, {
             method: "POST",
             credentials: "include",
             body: data,

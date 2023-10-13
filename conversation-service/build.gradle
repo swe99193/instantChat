@@ -18,15 +18,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.0.0'
 	implementation 'org.springframework.session:spring-session-data-redis:3.0.0'
 
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.0.0'
-	runtimeOnly 'org.postgresql:postgresql:42.5.1'
-
 	compileOnly 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	// DynamoDB
-	implementation 'com.amazonaws:aws-java-sdk-dynamodb:1.12.490'
-	implementation 'com.github.derjust:spring-data-dynamodb:5.1.0'
+	implementation 'software.amazon.awssdk:dynamodb:2.20.147'
 
 	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'

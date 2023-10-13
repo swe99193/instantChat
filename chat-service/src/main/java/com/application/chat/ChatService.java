@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -33,6 +32,7 @@ public class ChatService {
     private ChannelMappingServiceBlockingStub channelMappingService;
 
     private final MessageService messageService;
+    private final S3Client s3Client;
 
 
     @Value("${amazon.s3.bucketname}")
@@ -40,8 +40,9 @@ public class ChatService {
 
 
     @Autowired
-    public ChatService(MessageService messageService) {
+    public ChatService(MessageService messageService, S3Client s3Client) {
         this.messageService = messageService;
+        this.s3Client = s3Client;
     }
 
     /**
@@ -93,21 +94,15 @@ public class ChatService {
         String objectName = String.format("file-message/%s/%s_%s", channelId, UUID.randomUUID().toString(), file.getOriginalFilename());
 
 
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
-                .build();
-
+        // store to S3
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectName)
                 .build();
 
         InputStream inputStream = file.getInputStream();
-        s3.putObject(objectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
+        s3Client.putObject(objectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
         inputStream.close();
-
-        s3.close();
 
         return objectName;
     }
@@ -129,20 +124,13 @@ public class ChatService {
 
 
         //  download from S3
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
-                .build();
-
         GetObjectRequest objectRequest = GetObjectRequest
                 .builder()
                 .bucket(bucketName)
                 .key(objectName)
                 .build();
 
-        ResponseBytes<GetObjectResponse> objectBytes = s3.getObjectAsBytes(objectRequest);
-
-        s3.close();
+        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(objectRequest);
 
         return objectBytes.asByteArray();
     }

@@ -1,70 +1,93 @@
 package com.application.config;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
+// aws sdk v1
+//import com.amazonaws.auth.AWSCredentials;
+//import com.amazonaws.auth.BasicAWSCredentials;
+//import com.amazonaws.regions.Regions;
+//import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+//import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+//import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+//import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
+// Dynamodb sdk v2 DynamoDbClient:
+// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CodeSamples.Java.html
 @Configuration
-@EnableDynamoDBRepositories
-        (basePackages = "com.application.message_storage")
 public class DynamoDBConfig {
 
     @Value("${spring.profiles.active}")
-    private String profile;
+    private static String profile;
 
-    @Value("${amazon.dynamodb.endpoint}")
-    private String amazonDynamoDBEndpoint;
+    private static final ArrayList<String> AWSProfileList = new ArrayList<String>(Arrays.asList("devAWS"));
 
-    @Value("${amazon.aws.accesskey}")
-    private String amazonAWSAccessKey;
 
-    @Value("${amazon.aws.secretkey}")
-    private String amazonAWSSecretKey;
-
-    private final ArrayList<String> AWSProfileList = new ArrayList<String>(Arrays.asList("devAWS"));
-
+    /**
+     * building dynamodb client (SDK v2)
+     */
     @Bean
-    public AmazonDynamoDB amazonDynamoDB() {
+    public DynamoDbClient dynamoDbClient(
+            @Value("${amazon.aws.accesskey}") String awsAccessKey,
+            @Value("${amazon.aws.secretkey}") String awsSecretKey
+    ){
 
         if (AWSProfileList.contains(profile)) {
-            return AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
-
-            // try this if below doesn't work
-            // explicitly specify IAM as credential provider
-            // ref: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-roles.html
-
-//            return AmazonDynamoDBClientBuilder.standard().withCredentials(new InstanceProfileCredentialsProvider(true)).withRegion(Regions.US_EAST_1).build();
+            return DynamoDbClient.builder()
+                    .region(Region.US_EAST_1)
+                    .build();
         }
         else {
-            AmazonDynamoDB amazonDynamoDB
-                    = new AmazonDynamoDBClient(amazonAWSCredentials());
-
-            if (!StringUtils.isEmpty(amazonDynamoDBEndpoint)) {
-                amazonDynamoDB.setEndpoint(amazonDynamoDBEndpoint);
-            }
-
-            return amazonDynamoDB;
+            return DynamoDbClient.builder()
+                    .region(Region.US_EAST_1)
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                            AwsBasicCredentials.create(awsAccessKey, awsSecretKey)))
+                    .build();
         }
     }
 
-    @Bean
-    public AWSCredentials amazonAWSCredentials() {
+    /* building dynamodb client SDK v1 */
+//    @Bean
+//    public AmazonDynamoDB amazonDynamoDB() {
+//
+//        if (AWSProfileList.contains(profile)) {
+//            return AmazonDynamoDBClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
+//
+//            // try this if below doesn't work
+//            // explicitly specify IAM as credential provider
+//            // ref: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-roles.html
+//
+////            return AmazonDynamoDBClientBuilder.standard().withCredentials(new InstanceProfileCredentialsProvider(true)).withRegion(Regions.US_EAST_1).build();
+//        }
+//        else {
+//            AmazonDynamoDB amazonDynamoDB
+//                    = new AmazonDynamoDBClient(amazonAWSCredentials());
+//
+//            if (!StringUtils.isEmpty(amazonDynamoDBEndpoint)) {
+//                amazonDynamoDB.setEndpoint(amazonDynamoDBEndpoint);
+//            }
+//
+//            return amazonDynamoDB;
+//        }
+//    }
 
-        if (AWSProfileList.contains(profile))       // Note: IAM don't need credentials
-            return null;
+//    @Bean
+//    public AWSCredentials amazonAWSCredentials() {
+//
+//        if (AWSProfileList.contains(profile))       // Note: IAM don't need credentials
+//            return null;
+//
+//        return new BasicAWSCredentials(
+//                amazonAWSAccessKey, amazonAWSSecretKey);
+//    }
 
-        return new BasicAWSCredentials(
-                amazonAWSAccessKey, amazonAWSSecretKey);
-    }
 }

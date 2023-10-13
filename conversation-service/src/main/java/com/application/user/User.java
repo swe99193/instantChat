@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 // lombok: https://projectlombok.org/features/GetterSetter
 
-import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 //import javax.persistence.*;
@@ -13,17 +12,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 // see: https://stackoverflow.com/questions/73350585/upgrade-from-spring-boot-2-7-2-to-spring-boot-3-0-0-snapshot-java-package-java
 import java.util.Collection;
 
+// TODO: remove this file, import from authentication service instead
+
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@Table(name = "users")
 // Note: UserDetails is a magic behind spring security
 public class User implements UserDetails {
-    @Id
-    @Column(nullable=false)
+
     private String username;
-    @Column(nullable=false)
     private String password;
 
     public User(String username, String password) {

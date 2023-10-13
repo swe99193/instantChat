@@ -18,6 +18,7 @@ import java.util.Map;
 
 
 @RestController
+@RequestMapping(path = "/chat")
 public class ChatController {
 
 	private final SimpMessagingTemplate messagingTemplate;
@@ -30,7 +31,9 @@ public class ChatController {
 	}
 
 
-	// private message
+	/**
+	 * endpoint for text message
+	 */
 	@MessageMapping("/private-message/{receiver}")
 	public void privateMessage(@DestinationVariable String receiver, IncomingMessage incomingMessage, Principal principal) throws Exception {
 
@@ -43,7 +46,9 @@ public class ChatController {
 
 		Long timestamp = System.currentTimeMillis();
 
-		// FIXME: comment out for dev
+		// DEBUG
+		System.out.printf("%s send to %s: %s\n", principal.getName(), receiver, incomingMessage.getContent());
+
 		// save message to DynamoDB
 		chatService.saveMessage(principal.getName(), receiver, incomingMessage.getContent(), incomingMessage.getContentType(), null, timestamp);
 
@@ -52,8 +57,6 @@ public class ChatController {
 		// Note: send to /user/{receiver}/queue/private.{sender}
 		// send to receiver
 		Map<String, Object> headers = new HashMap<>();
-		headers.put("auto-delete", "true");
-		headers.put("expires", System.currentTimeMillis() + 700);	// set expire time, adjust based on the latency of MQ
 
 		// send to receiver
 		// sent if it is NOT self-conversation
@@ -65,11 +68,14 @@ public class ChatController {
 	}
 
 	@GetMapping("/message")
-	public List<Message> listMessage(@RequestParam String receiver, @RequestParam Long timestamp, @RequestParam Integer pageSize, Principal principal){
+	public List<Message> getMessage(@RequestParam String receiver, @RequestParam Long timestamp, @RequestParam Integer pageSize, Principal principal){
 
 		return chatService.listMessage(principal.getName(), receiver, timestamp, pageSize);
 	}
 
+	/**
+	 * endpoint for file message
+	 */
 	@PostMapping("/private-message/file")
 	public void privateMessageWithFile(@RequestParam String receiver, IncomingMessageFile incomingMessageFile, Principal principal) throws Exception {
 
@@ -80,7 +86,6 @@ public class ChatController {
 		MultipartFile file = incomingMessageFile.getFile();
 		Long timestamp = System.currentTimeMillis();
 
-		// FIXME: comment out for dev
 		// S3 upload
 		String objectName = chatService.saveFile(principal.getName(), receiver, file);
 
@@ -92,8 +97,6 @@ public class ChatController {
 		// Note: send to /user/{receiver}/queue/private.{sender}
 		// send to receiver
 		Map<String, Object> headers = new HashMap<>();
-		headers.put("auto-delete", "true");
-		headers.put("expires", System.currentTimeMillis() + 700);	// set expire time, adjust based on the latency of MQ
 
 		// send to receiver
 		// sent if it is NOT self-conversation

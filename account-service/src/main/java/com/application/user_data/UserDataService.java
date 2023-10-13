@@ -25,9 +25,12 @@ public class UserDataService {
     @Value("${amazon.s3.bucketname}")
     private String bucketName;
 
+    private final S3Client s3Client;
+
     @Autowired
-    public UserDataService(UserDataRepository userDataRepository) {
+    public UserDataService(UserDataRepository userDataRepository, S3Client s3Client) {
         this.userDataRepository = userDataRepository;
+        this.s3Client = s3Client;
     }
 
     public UserData getUserData(String username){
@@ -75,21 +78,14 @@ public class UserDataService {
      * upload file to S3
      */
     private void saveFile(String objectName, MultipartFile file) throws IOException {
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
-                .build();
-
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectName)
                 .build();
 
         InputStream inputStream = file.getInputStream();
-        s3.putObject(objectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
+        s3Client.putObject(objectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
         inputStream.close();
-
-        s3.close();
     }
 
 
@@ -99,20 +95,13 @@ public class UserDataService {
     public byte[] getFile(String objectName){
 
         //  download from S3
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
-                .build();
-
         GetObjectRequest objectRequest = GetObjectRequest
                 .builder()
                 .bucket(bucketName)
                 .key(objectName)
                 .build();
 
-        ResponseBytes<GetObjectResponse> objectBytes = s3.getObjectAsBytes(objectRequest);
-
-        s3.close();
+        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(objectRequest);
 
         return objectBytes.asByteArray();
     }
@@ -121,18 +110,11 @@ public class UserDataService {
      * delete file from s3
      */
     public void deleteFile(String objectName){
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
-                .build();
-
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(objectName)
                 .build();
 
-        s3.deleteObject(deleteObjectRequest);
-
-        s3.close();
+        s3Client.deleteObject(deleteObjectRequest);
     }
 }
