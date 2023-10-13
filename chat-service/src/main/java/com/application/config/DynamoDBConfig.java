@@ -12,13 +12,7 @@ package com.application.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-// aws sdk v2
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -35,19 +29,6 @@ public class DynamoDBConfig {
     @Value("${spring.profiles.active}")
     private static String profile;
 
-    @Value("${amazon.dynamodb.endpoint}")
-    private String amazonDynamoDBEndpoint;
-
-//    @Value("${amazon.aws.accesskey}")
-//    private String awsAccessKey;
-//
-//    @Value("${amazon.aws.secretkey}")
-//    private String awsSecretKey;
-
-    public DynamoDBConfig() {
-        System.out.println("✅ DynamoDBConfig Constructor");
-    }
-
     private static final ArrayList<String> AWSProfileList = new ArrayList<String>(Arrays.asList("devAWS"));
 
 
@@ -63,17 +44,13 @@ public class DynamoDBConfig {
         if (AWSProfileList.contains(profile)) {
             return DynamoDbClient.builder()
                     .region(Region.US_EAST_1)
-//                .credentialsProvider(InstanceProfileCredentialsProvider.create()) // automatically load credentials by EC2
                     .build();
         }
         else {
             return DynamoDbClient.builder()
-
-
                     .region(Region.US_EAST_1)
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsBasicCredentials.create(awsAccessKey, awsSecretKey)))
-//                .credentialsProvider(InstanceProfileCredentialsProvider.create()) // automatically load credentials by EC2
                     .build();
         }
     }

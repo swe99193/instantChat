@@ -7,14 +7,16 @@ package com.application.message_storage;
 //import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 // aws sdk v2
-import com.application.config.DynamoDBConfig;
-import software.amazon.awssdk.services.dynamodb.model.*;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 // Dynamodb sdk v2:
