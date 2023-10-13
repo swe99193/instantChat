@@ -22,7 +22,7 @@ import { imageExtension } from './shared/supportedFileExtension';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL_1 = "http://localhost:8084";
+// const BACKEND_URL_1 = "http://localhost:8084";  // for local testing
 const pageSize = 20;
 
 type LayoutState = "init" | "fetch" | "send";
@@ -166,7 +166,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         const params = new URLSearchParams({
             username: username,
         });
-        const res = await fetch(`${BACKEND_URL_1}/user-data?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include" });
 
         setStatusMessage((await res.json()).statusMessage);
     }

@@ -7,8 +7,8 @@ import { useAppSelector } from './redux/hooks';
 // mui
 import { Box, Button, InputLabel, Link, Paper, Stack, TextField, Typography } from "@mui/material";
 
-// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL = "http://localhost:8084";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// const BACKEND_URL = "http://localhost:8084";  // for local testing
 
 function Login() {
     const status = useAppSelector(state => state.login.status); // Redux

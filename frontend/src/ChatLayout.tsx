@@ -15,9 +15,9 @@ import NavigationDrawer from './NavigationDrawer';
 import { fetchProfilePicture } from './utils/fetchProfilePicture';
 
 
-// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL_1 = "http://localhost:8082";
-const BACKEND_URL_2 = "http://localhost:8084";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// const BACKEND_URL_1 = "http://localhost:8082";  // for local testing
+// const BACKEND_URL_2 = "http://localhost:8084";  // for local testing
 const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 
@@ -45,7 +45,7 @@ function ChatLayout() {
      */
     const fetchConversation = async () => {
 
-        const res = await fetch(`${BACKEND_URL_1}/conversation`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/conversation`, { credentials: "include" });
 
         if (res.status != 200) {
             alert("🔴 Server error");
@@ -100,7 +100,7 @@ function ChatLayout() {
             username: username
         });
 
-        const res = await fetch(`${BACKEND_URL_2}/user/exists?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/user/exists?${params}`, { credentials: "include" });
 
         const resJson = await res.json();
 

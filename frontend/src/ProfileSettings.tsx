@@ -14,8 +14,8 @@ import { useSnackbar } from 'notistack';
 import { fetchProfilePicture } from "./utils/fetchProfilePicture";
 import { imageExtension } from "./shared/supportedFileExtension";
 
-// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL = "http://localhost:8084";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// const BACKEND_URL = "http://localhost:8084";  // for local testing
 
 
 function ProfileSettings() {
