@@ -270,7 +270,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             handleReceive(JSON.parse(message.body));
         }, { "auto-delete": true });
 
-        const echoSub = stompClient.subscribe(`/user/queue/private.${receiver}-${currentUserId}`, function (message) {
+        const echoSub = stompClient.subscribe(`/user/queue/private.echo.${receiver}`, function (message) {
             handleSendEcho(JSON.parse(message.body));
         }, { "auto-delete": true });
 
