@@ -25,7 +25,13 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 // const BACKEND_URL_1 = "http://localhost:8084";  // for local testing
 const pageSize = 20;
 
-type LayoutState = "init" | "fetch" | "send";
+/**
+ * init: initial rendering (first fetch)
+ * fetch: fetch new messages, maintain current scroll position
+ * bottom: scroll to bottom
+ * normal: stable state, no scrolling control
+ */
+type LayoutState = "init" | "fetch" | "bottom" | "normal";
 
 interface props {
     stompClient: Stomp.Client;
@@ -70,10 +76,10 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             return;
         }
 
-        setMessageInput(""); // set input to empty
-        setLayoutState("send");
-
         stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: message }));
+
+        setMessageInput(""); // set input to empty
+        setLayoutState("bottom");
     };
 
     const onEnter = (event) => {
@@ -88,10 +94,10 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                 return;
             }
 
-            setMessageInput(""); // set input to empty
-            setLayoutState("send");
-
             stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: messageInput }));
+
+            setMessageInput(""); // set input to empty
+            setLayoutState("bottom");
         }
     };
 
@@ -180,8 +186,6 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
      * @param pageSize The number of query rows. 
      */
     const fetchMessage = async (receiver: string, timestamp: number, pageSize: number) => {
-        setLockFetch(true);
-
         const params = new URLSearchParams({
             receiver: receiver,
             timestamp: timestamp.toString(),
@@ -233,8 +237,18 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         const arr = await Promise.all(arrPromise);
 
         setMessages(_list => arr.concat(_list));
+    };
 
-        setLayoutState("fetch");  // allow text input
+
+    /**
+     * Initial message fetching. 
+     */
+    const initFetchMessage = async (receiver: string, timestamp: number, pageSize: number) => {
+        setLockFetch(true);
+
+        await fetchMessage(receiver, timestamp, pageSize);
+
+        setLayoutState("bottom");  // allow text input
         setFileDisabled(false);  // allow file upload
         setLockFetch(false);
     };
@@ -253,7 +267,13 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         // fetch new messages if scoll to top
         // skip if fetch locked, or still in initial state, or reached top
         if (!lockFetch && layoutState != "init" && !isTop && chatRoomRef.current.scrollTop == 0) {
+            setLockFetch(true);
+
+            setLayoutState("fetch");  // allow text input
             fetchMessage(receiver, messages[0].timestamp, pageSize);
+
+            setFileDisabled(false);  // allow file upload
+            setLockFetch(false);
         }
 
         // console.log(chatRoomRef.current.scrollTop);
@@ -329,7 +349,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setMessageInput(""); // clear input bar
         setStatusMessage(""); // clear status messaage
         getStatusMessage(receiver);
-        fetchMessage(receiver, Number.MAX_SAFE_INTEGER, pageSize);
+        initFetchMessage(receiver, Number.MAX_SAFE_INTEGER, pageSize);
         const { receiveSub, echoSub } = subscribeQueue();
 
         return function cleanup() {
@@ -346,24 +366,31 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
     useLayoutEffect(() => {
 
         // console.log("❌ " + chatRoomRef.current.scrollHeight)   // DEBUG
+        // console.log("❌ " + layoutState)   // DEBUG
 
         setTimeout(() => {
             // wait for calculation of total height including images' height
+
             // console.log("✅ " + chatRoomRef.current.scrollHeight)   // DEBUG
+            // console.log("✅ " + layoutState)   // DEBUG
 
             // update total height
             setScrollHeight(chatRoomRef.current.scrollHeight);
-        }, 5);
 
-        if (layoutState == "init" || layoutState == "send") {
-            // scroll to bottom
-            chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight;
-        } else {
-            // stay at the same view after new messages are fetched
-            chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight - scrollHeight;    // current - previous height
-        }
+            if (layoutState == "init" || layoutState == "bottom") {
+                // scroll to bottom
+                chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight;
+            } else if (layoutState == "fetch") {
+                // stay at the same view after new messages are fetched
+                chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight - scrollHeight;    // current - previous height
+            }
 
-    }, [layoutState, messages]);
+            // set to normal state after and message updates (new fetch, send, receive)
+            if (layoutState != "init")
+                setLayoutState("normal");
+        }, 10);
+
+    }, [messages]);
 
 
     return (
@@ -495,6 +522,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                         fullWidth
                         multiline
                         maxRows={10}    // set maximum visible rows
+                        disabled={layoutState == "init"}
                         sx={{
                             // change border color
                             // https://stackoverflow.com/questions/52911169/how-to-change-the-border-color-of-material-ui-textfield
