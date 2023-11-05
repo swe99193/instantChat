@@ -48,66 +48,71 @@ import java.util.Arrays;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<Session>  {
 
-	@Value("${spring.profiles.active}")
-	private String profile;
+//	@Value("${spring.profiles.active}")
+//	private String profile;
 
 	@Value("${frontend.url}")
 	private String frontendUrl;
 
-	@Value("${rabbitmq.host}")
-	private String rabbitmqHost;
+//	@Value("${rabbitmq.host}")
+//	private String rabbitmqHost;
+//
+//	@Value("${rabbitmq.port}")
+//	private int rabbitmqPort;
 
-	@Value("${rabbitmq.port}")
-	private int rabbitmqPort;
-
-	@Value("${rabbitmq.username}")
-	private String rabbitmqUsername;
-
-	@Value("${rabbitmq.password}")
-	private String rabbitmqPassword;
+//	@Value("${rabbitmq.username}")
+//	private String rabbitmqUsername;
+//
+//	@Value("${rabbitmq.password}")
+//	private String rabbitmqPassword;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 
-		ArrayList<String> LocalProfileList = new ArrayList<String>(Arrays.asList("Local"));
+		// in-memory broker: https://docs.spring.io/spring-framework/reference/web/websocket/stomp/handle-simple-broker.html
+		config.enableSimpleBroker("/topic", "/queue");
 
-		if (LocalProfileList.contains(profile)) {
-			// localhost MQ
-			config.enableStompBrokerRelay("/topic", "/queue")
-					.setAutoStartup(true)	// not sure (?)
-					.setUserDestinationBroadcast("/topic/log-unresolved-user")
-					.setUserRegistryBroadcast("/topic/log-user-registry")
-					.setRelayHost(rabbitmqHost)
-					.setRelayPort(rabbitmqPort)
-					.setSystemLogin(rabbitmqUsername)
-					.setSystemPasscode(rabbitmqPassword)
-					.setClientLogin(rabbitmqUsername)
-					.setClientPasscode(rabbitmqPassword);
-		}
-		else {
-			// AWS MQ
-			// AWS MQ need TCP Client
-			ReactorNettyTcpClient<byte[]> tcpClient = new ReactorNettyTcpClient<>(builder ->
-					builder
-							.host(rabbitmqHost)
-							.port(rabbitmqPort)
-							.secure()
-					, new StompReactorNettyCodec());
+		// external broker(rabbitmq): https://docs.spring.io/spring-framework/reference/web/websocket/stomp/handle-broker-relay.html
 
-			// Note: don't add "/user" into simple broker
-			config.enableStompBrokerRelay("/topic", "/queue")
-					.setAutoStartup(true)    // not sure (?)
-					.setUserDestinationBroadcast("/topic/log-unresolved-user")
-					.setUserRegistryBroadcast("/topic/log-user-registry")
-//				.setRelayHost(rabbitmqHost)
-//				.setRelayPort(rabbitmqPort)
-					.setSystemLogin(rabbitmqUsername)
-					.setSystemPasscode(rabbitmqPassword)
-					.setClientLogin(rabbitmqUsername)
-					.setClientPasscode(rabbitmqPassword)
-					// need both System and Client credentials
-					.setTcpClient(tcpClient);
-		}
+//		ArrayList<String> LocalProfileList = new ArrayList<String>(Arrays.asList("Local"));
+//
+//		if (LocalProfileList.contains(profile)) {
+//			// localhost MQ
+//			config.enableStompBrokerRelay("/topic", "/queue")
+//					.setAutoStartup(true)	// not sure (?)
+//					.setUserDestinationBroadcast("/topic/log-unresolved-user")
+//					.setUserRegistryBroadcast("/topic/log-user-registry")
+//					.setRelayHost(rabbitmqHost)
+//					.setRelayPort(rabbitmqPort)
+//					.setSystemLogin(rabbitmqUsername)
+//					.setSystemPasscode(rabbitmqPassword)
+//					.setClientLogin(rabbitmqUsername)
+//					.setClientPasscode(rabbitmqPassword);
+//		}
+//		else {
+//			// AWS MQ
+//			// AWS MQ need TCP Client
+//			ReactorNettyTcpClient<byte[]> tcpClient = new ReactorNettyTcpClient<>(builder ->
+//					builder
+//							.host(rabbitmqHost)
+//							.port(rabbitmqPort)
+//							.secure()
+//					, new StompReactorNettyCodec());
+//
+//			// Note: don't add "/user" into simple broker
+//			config.enableStompBrokerRelay("/topic", "/queue")
+//					.setAutoStartup(true)    // not sure (?)
+//					.setUserDestinationBroadcast("/topic/log-unresolved-user")
+//					.setUserRegistryBroadcast("/topic/log-user-registry")
+////				.setRelayHost(rabbitmqHost)
+////				.setRelayPort(rabbitmqPort)
+//					.setSystemLogin(rabbitmqUsername)
+//					.setSystemPasscode(rabbitmqPassword)
+//					.setClientLogin(rabbitmqUsername)
+//					.setClientPasscode(rabbitmqPassword)
+//					// need both System and Client credentials
+//					.setTcpClient(tcpClient);
+//		}
 
 
 		config.setApplicationDestinationPrefixes("/app");
