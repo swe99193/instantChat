@@ -12,9 +12,15 @@ import lombok.Setter;
 @NoArgsConstructor
 public class OutgoingMessage {
 
-	private String contentType;
-	private String content;
-	private Long fileSize;
-	private Long timestamp;
+	public String contentType;
+	public String content;
+	public Long fileSize;
+	public Long timestamp;
 
+	public String sender;
+	public String receiver;
+	/**
+	 * Whether this message is an echoed message (echo messages are sent to yourself when you send messages to another user).
+	 */
+	public Boolean isEcho;
 }

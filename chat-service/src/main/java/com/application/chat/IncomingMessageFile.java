@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor
 public class IncomingMessageFile {
 
-	private String contentType;
-	private MultipartFile file;
+	public String contentType;
+	public MultipartFile file;
 
 }
