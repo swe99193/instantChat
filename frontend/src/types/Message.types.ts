@@ -1,7 +1,7 @@
 export interface Message {
     sender?: string;
     receiver?: string;
-    content?: any;
+    content?: string;
     contentType?: "text" | "file" | "image";
     filename?: string;
     fileSize?: number;

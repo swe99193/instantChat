@@ -3,7 +3,7 @@ import { useAppSelector } from './redux/hooks';
 import Stomp from 'stompjs';
 
 // mui
-import { AppBar, Avatar, CircularProgress, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, CircularProgress, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
 import { Stack } from '@mui/system';
 
 // mui icons
@@ -27,11 +27,14 @@ const pageSize = 20;
 
 /**
  * init: initial rendering (first fetch)
- * fetch: fetch new messages, maintain current scroll position
- * bottom: scroll to bottom
+ * 
+ * send: send new messages, scroll to bottom
+ * 
+ * receive: receive new messages, maintain current scroll position
+ * 
  * normal: stable state, no scrolling control
  */
-type LayoutState = "init" | "fetch" | "bottom" | "normal";
+type LayoutState = "init" | "send" | "receive" | "normal";
 
 interface props {
     stompClient: Stomp.Client;
@@ -39,7 +42,10 @@ interface props {
     profilePictureUrl: string;
 }
 
-const isHeadMessage = (t1: number, t2: number) => {
+/**
+ * Check if two timestamp are the same date
+ */
+const isSameDate = (t1: number, t2: number) => {
     const D1 = new Date(t1);
     const D2 = new Date(t2);
     // console.log(D2.toLocaleDateString());   // ex: 8/17/2023
@@ -47,18 +53,40 @@ const isHeadMessage = (t1: number, t2: number) => {
     return !(D1.toLocaleDateString() == D2.toLocaleDateString());
 }
 
+/**
+ * Check if message is an image by extension. 
+ */
+function isImage(message: Message) {
+    if (message.contentType == "file") {
+        var filename = message.content.split(".");
+        if (filename.length > 1)
+            var file_type = filename[filename.length - 1].toLowerCase();
+
+        if (imageExtension.includes(file_type))
+            return true;
+    }
+    return false
+}
+
+/**
+ * Convert object name to filename.
+ * Skip folder name & channel_id & random uuid.
+ */
+function objectNameToFilename(objectName: string) {
+    return (objectName).split("/").slice(2).join().split("_").slice(1).join();
+}
 
 function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
     const [messageInput, setMessageInput] = useState("");
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);    // from newest to earliest
     const [layoutState, setLayoutState] = useState<LayoutState>("init"); //  controll initial rendering & scroll adjusment
     const [fileDisabled, setFileDisabled] = useState(true); // disable file upload
     const [lockInput, setLockInput] = useState(false); // prevent send during composition event 
     const [isTop, setIsTop] = useState(false); // if the earliest message is reached
     const [lockFetch, setLockFetch] = useState(false); // prevent repetitive fetching
     const chatRoomRef = useRef(null);
-
     const [statusMessage, setStatusMessage] = useState("");
+    const [fetchSet, setfetchSet] = useState(new Set());    // timestamps that are processed by fetchImages()
 
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
@@ -79,7 +107,6 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: message }));
 
         setMessageInput(""); // set input to empty
-        setLayoutState("bottom");
     };
 
     const onEnter = (event) => {
@@ -97,74 +124,42 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: messageInput }));
 
             setMessageInput(""); // set input to empty
-            setLayoutState("bottom");
         }
     };
 
 
     // receive the echo of the message you sent
-    const handleSendEcho = async (message: Message) => {
-        if (message.contentType == "file") {
-
-            var _filename: string[] = message.content.split(".");
-            if (_filename.length > 1)
-                var file_type = _filename[_filename.length - 1].toLowerCase();
-
-            // fetch image
-            if (imageExtension.includes(file_type)) {
-                const params = new URLSearchParams({
-                    filename: message.content,
-                    receiver: receiver,
-                });
-                const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
-                var fileBlob = await res.blob();
-                var object_url = URL.createObjectURL(fileBlob);
-            }
-        }
-
-        // take the data from argument instead of state variable
-        setMessages(messages => [...messages, {
-            content: imageExtension.includes(file_type) ? object_url : message.content,
-            contentType: imageExtension.includes(file_type) ? "image" : message.contentType,
-            filename: (message.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
-            fileSize: message.fileSize,
-            timestamp: message.timestamp,
+    const handleSendEcho = async (item: Message) => {
+        // note: take the data from argument instead of state variable
+        setMessages(messages => [{
+            content: item.content,
+            contentType: isImage(item) ? "image" : item.contentType,
+            filename: objectNameToFilename(item.content),
+            fileSize: item.fileSize,
+            timestamp: item.timestamp,
             direction: "out",
             receiver: receiver,
-            isHeadMessage: messages.length == 0 || isHeadMessage(messages[messages.length - 1].timestamp, message.timestamp),     // set divider flag
-        }]);
+            isHeadMessage: messages.length == 0 || isSameDate(messages[0].timestamp, item.timestamp),     // set divider flag
+        }, ...messages]);
+
+        setLayoutState("send");
     };
 
 
-    const handleReceive = async (message: Message) => {
-        if (message.contentType == "file") {
-            var _filename: string[] = message.content.split(".");
-            if (_filename.length > 1)
-                var file_type = _filename[_filename.length - 1].toLowerCase();
-
-            // fetch image
-            if (imageExtension.includes(file_type)) {
-                const params = new URLSearchParams({
-                    filename: message.content,
-                    receiver: receiver,
-                });
-                const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
-                var fileBlob = await res.blob();
-                var object_url = URL.createObjectURL(fileBlob);
-            }
-        }
-
-        // take the data from argument instead of state variable
-        setMessages(messages => [...messages, {
-            content: imageExtension.includes(file_type) ? object_url : message.content,
-            contentType: imageExtension.includes(file_type) ? "image" : message.contentType,
-            filename: (message.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
-            fileSize: message.fileSize,
-            timestamp: message.timestamp,
+    const handleReceive = async (item: Message) => {
+        // note: take the data from argument instead of state variable
+        setMessages(messages => [{
+            content: item.content,
+            contentType: isImage(item) ? "image" : item.contentType,
+            filename: objectNameToFilename(item.content),
+            fileSize: item.fileSize,
+            timestamp: item.timestamp,
             direction: "in",
             receiver: receiver,
-            isHeadMessage: messages.length == 0 || isHeadMessage(messages[messages.length - 1].timestamp, message.timestamp),     // set divider flag
-        }]);
+            isHeadMessage: messages.length == 0 || isSameDate(messages[0].timestamp, item.timestamp),     // set divider flag
+        }, ...messages]);
+
+        setLayoutState("receive");
     };
 
 
@@ -182,7 +177,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
      * Fetch messages based on timestamp and page size. 
      * 
      * @param receiver Fetch messages with this username. 
-     * @param timestamp Fetch messagew before this timestamp. 
+     * @param timestamp Fetch message before this timestamp. 
      * @param pageSize The number of query rows. 
      */
     const fetchMessage = async (receiver: string, timestamp: number, pageSize: number) => {
@@ -202,43 +197,81 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             setIsTop(true);
         }
 
-        // response is in descending order (newest message first), need to reverse array
-        const arrPromise = messageList.reverse().map(async (item, index) => {
-            if (item.contentType == "file") {
-
-                var _filename = item.content.split(".");
-                if (_filename.length > 1)
-                    var file_type = _filename[_filename.length - 1].toLowerCase();
-
-                // fetch image
-                if (imageExtension.includes(file_type)) {
-                    const params = new URLSearchParams({
-                        filename: item.content,
-                        receiver: receiver,
-                    });
-                    const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
-                    var fileBlob = await res.blob();
-                    var object_url = URL.createObjectURL(fileBlob);
+        // set divider for the last item in old List
+        if (messageList.length == 0) {
+            setMessages(oldList => oldList.map((item, index) => {
+                return {
+                    ...item,
+                    isHeadMessage: index == oldList.length - 1 ? true : item.isHeadMessage,
                 }
-            }
+            }));
+            return;
+        }
 
+        // response is in descending order (newest message first)
+        messageList = messageList.map((item, index) => {
             return {
-                content: imageExtension.includes(file_type) ? object_url : item.content,
-                contentType: imageExtension.includes(file_type) ? "image" : item.contentType,
-                filename: (item.content as string).split("/").slice(2).join().split("_").slice(1).join(),    // skip folder & channel_id & random uuid
+                content: item.content,
+                contentType: isImage(item) ? "image" : item.contentType,
+                filename: objectNameToFilename(item.content),
                 fileSize: item.fileSize,
                 timestamp: item.timestamp,
                 direction: (item.sender == currentUserId) ? "out" : "in",
                 receiver: receiver,
-                isHeadMessage: index == 0 ? isTop : isHeadMessage(messageList[index - 1].timestamp, messageList[index].timestamp),     // set divider flag
-            } as Message;
+                isHeadMessage: index == messageList.length - 1 ? isTop : isSameDate(messageList[index].timestamp, messageList[index + 1].timestamp),     // set divider flag
+            };
         });
 
-        const arr = await Promise.all(arrPromise);
+        setMessages(oldList => oldList.concat(messageList));
 
-        setMessages(_list => arr.concat(_list));
     };
 
+    /**
+     * fetch images for new messages
+     */
+    const fetchImages = async () => {
+        // check not-processed items
+        const needFetch = messages.some((item, index) => !fetchSet.has(item.timestamp));
+
+        if (!needFetch)
+            return;
+
+        // update fetchSet to cover all messages
+        const newSet = new Set();
+        messages.forEach(async (item, index) => { newSet.add(item.timestamp) });
+        setfetchSet(newSet);
+
+        messages.forEach(async (item, index) => {
+            var object_url = item.content;
+
+            // fetch new images
+            if (!fetchSet.has(item.timestamp) && item.contentType == "image") {
+                const params = new URLSearchParams({
+                    filename: item.content,
+                    receiver: receiver,
+                });
+
+                let res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include" });
+                const s3objectUrl: String = await res.text();
+
+                res = await fetch(`${s3objectUrl}`);
+                var fileBlob = await res.blob();
+                object_url = URL.createObjectURL(fileBlob);
+
+                const newItem = {
+                    ...item,
+                    content: object_url,
+                } as Message;
+
+                const timestamp = item.timestamp;
+
+                // Note: locate item by timestamp, since index may change during other messages update
+                setMessages(messages => messages.map((x) => x.timestamp == timestamp ? newItem : x));
+            }
+
+        })
+
+    }
 
     /**
      * Initial message fetching. 
@@ -247,10 +280,11 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setLockFetch(true);
 
         await fetchMessage(receiver, timestamp, pageSize);
+        setLayoutState("normal");
 
-        setLayoutState("bottom");  // allow text input
         setFileDisabled(false);  // allow file upload
         setLockFetch(false);
+
     };
 
 
@@ -260,17 +294,16 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
      * Note:
      *  zoom in/out might also trigger this event
      */
-    const chatOnScroll = () => {
-        // update current height
+    const chatOnScroll = async () => {
+        // update current position
         setScrollTop(x => chatRoomRef.current.scrollTop);
 
         // fetch new messages if scoll to top
         // skip if fetch locked, or still in initial state, or reached top
-        if (!lockFetch && layoutState != "init" && !isTop && chatRoomRef.current.scrollTop == 0) {
+        if (!lockFetch && layoutState != "init" && !isTop && Math.abs(chatRoomRef.current.scrollTop) > chatRoomRef.current.scrollHeight - window.innerHeight * 2) {
             setLockFetch(true);
 
-            setLayoutState("fetch");  // allow text input
-            fetchMessage(receiver, messages[0].timestamp, pageSize);
+            await fetchMessage(receiver, messages[messages.length - 1].timestamp, pageSize);
 
             setFileDisabled(false);  // allow file upload
             setLockFetch(false);
@@ -350,6 +383,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setStatusMessage(""); // clear status messaage
         getStatusMessage(receiver);
         initFetchMessage(receiver, Number.MAX_SAFE_INTEGER, pageSize);
+        setfetchSet(new Set());
         const { receiveSub, echoSub } = subscribeQueue();
 
         return function cleanup() {
@@ -361,37 +395,43 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
     }, [receiver]); // re-render when receiver change
 
 
-    // adjust scroll position BEFORE rendering
     // see useLayoutEffect: https://react.dev/reference/react/useLayoutEffect
-    useLayoutEffect(() => {
+    // useLayoutEffect(() => {
+    useEffect(() => {
 
+        // console.log("❌ " + scrollTop)   // DEBUG
+        // console.log("❌ " + scrollHeight)   // DEBUG
         // console.log("❌ " + chatRoomRef.current.scrollHeight)   // DEBUG
         // console.log("❌ " + layoutState)   // DEBUG
+        // console.log(messages)
+        // console.log(layoutState)
 
-        setTimeout(() => {
-            // wait for calculation of total height including images' height
+        // setTimeout(() => {
+        //     console.log("✅ " + scrollTop)   // DEBUG
+        //     console.log("✅ " + scrollHeight)   // DEBUG
+        //     console.log("✅ " + chatRoomRef.current.scrollHeight)   // DEBUG
+        //     console.log("✅ " + layoutState)   // DEBUG
+        // }, 10);
 
-            // console.log("✅ " + chatRoomRef.current.scrollHeight)   // DEBUG
-            // console.log("✅ " + layoutState)   // DEBUG
+        // update total height
+        setScrollHeight(chatRoomRef.current.scrollHeight);
 
-            // update total height
-            setScrollHeight(chatRoomRef.current.scrollHeight);
-
-            if (layoutState == "init" || layoutState == "bottom") {
-                // scroll to bottom
-                chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight;
-            } else if (layoutState == "fetch") {
-                // stay at the same view after new messages are fetched
-                chatRoomRef.current.scrollTop = chatRoomRef.current.scrollHeight - scrollHeight;    // current - previous height
-            }
-
-            // set to normal state after and message updates (new fetch, send, receive)
-            if (layoutState != "init")
-                setLayoutState("normal");
-        }, 10);
+        if (layoutState == "receive") {
+            // stay at the same view
+            chatRoomRef.current.scrollTop = scrollTop - (chatRoomRef.current.scrollHeight - scrollHeight);    // current - previous height
+            setLayoutState("normal");
+        } else if (layoutState == "send") {
+            // scroll to bottom
+            chatRoomRef.current.scrollTop = 0;
+            setLayoutState("normal");
+        }
 
     }, [messages]);
 
+    // fetch image files after setting message list
+    useEffect(() => {
+        fetchImages();
+    }, [messages])
 
     return (
         <div style={{ display: "flex", width: "100%", flexDirection: "column", minWidth: 0 }}>
@@ -441,13 +481,27 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             </AppBar>
 
             {/* chat room */}
-            <div onScroll={chatOnScroll} ref={chatRoomRef} style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "auto" }}>
+            <div onScroll={chatOnScroll} ref={chatRoomRef} style={{ display: "flex", flexDirection: "column-reverse", flexGrow: 1, overflow: "auto" }}>
 
                 {
                     layoutState == "init" ?
                         <Skeleton variant="rectangular" animation="wave" height="100%" />   // loading placeholder
                         :
                         <>
+                            {/* add this empty block to fill up the empty space before messages */}
+                            <Box sx={{ flexGrow: 1 }}></Box>
+
+                            <List
+                                sx={{
+                                    padding: "10px",
+                                    display: "flex",
+                                    flexDirection: "column-reverse"
+                                }}
+                            >
+                                {
+                                    messages.map((item, index) => <MessageItem item={item} />)
+                                }
+                            </List>
                             {
                                 !isTop &&
                                 <div style={{ display: "flex", minHeight: "40px", justifyContent: "center", alignItems: "center" }}>
@@ -457,16 +511,6 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                                     }
                                 </div>
                             }
-
-                            <List
-                                sx={{
-                                    padding: "10px"
-                                }}
-                            >
-                                {
-                                    messages.map((item, index) => <MessageItem item={item} />)
-                                }
-                            </List>
                         </>
                 }
             </div>
