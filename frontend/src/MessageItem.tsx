@@ -6,7 +6,7 @@
 import { useState } from "react";
 
 // mui
-import { Dialog, DialogContent, Divider, IconButton, ListItem, Paper, Stack, Typography } from "@mui/material";
+import { Box, CircularProgress, Dialog, DialogContent, Divider, IconButton, ListItem, Paper, Stack, Typography } from "@mui/material";
 
 // mui icons
 import { Close, FilePresent } from "@mui/icons-material";
@@ -42,12 +42,15 @@ function MessageItem({ item }: props) {
         });
 
         // download file
-        const res = await fetch(`${BACKEND_URL}/chat/message/file?${params}`, { credentials: "include" });
-        var fileBlob = await res.blob();
-        var object_url = URL.createObjectURL(fileBlob);
+        let res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include" });
+        const s3objectUrl: String = await res.text();
+
+        res = await fetch(`${s3objectUrl}`);
+        const fileBlob = await res.blob();
+        const object_url = URL.createObjectURL(fileBlob);
 
         // create temorary element for file object
-        var fileElement = document.createElement("a");
+        let fileElement = document.createElement("a");
         fileElement.href = object_url;
         fileElement.download = item.filename;
         fileElement.click();
@@ -64,7 +67,7 @@ function MessageItem({ item }: props) {
     }
 
     return (
-        <>
+        <div>
 
             {
                 // Date divider
@@ -122,9 +125,18 @@ function MessageItem({ item }: props) {
                     // style: see object-fit
                     item.contentType == "image" &&
                     <>
-                        <div style={{ maxWidth: "50%", margin: "0px 10px", overflow: "hidden", borderRadius: "20px", cursor: "pointer" }} onClick={() => setOpen(true)}>
+                        <div style={{ maxWidth: "50%", margin: "0px 10px", overflow: "hidden", borderRadius: "20px", height: "150px", cursor: "pointer" }} onClick={() => setOpen(true)}>
                             {/* remove extra space: https://stackoverflow.com/questions/10844205/html-5-strange-img-always-adds-3px-margin-at-bottom */}
-                            <img style={{ objectFit: "cover", verticalAlign: "middle", minWidth: "50px", maxWidth: "400px", minHeight: "50px", maxHeight: "150px", padding: 0, margin: 0 }} src={item.content} ></img>
+
+                            {
+                                // set fixed height to stablize scroll position
+                                item.content.startsWith("blob") ?
+                                    <img style={{ objectFit: "cover", verticalAlign: "middle", height: "150px", padding: 0, margin: 0 }} src={item.content} ></img>
+                                    :
+                                    <Box sx={{ display: 'flex', background: "lightgrey", height: "150px", width: "150px", justifyContent: "center", alignItems: "center" }}>
+                                        <CircularProgress color="secondary" />
+                                    </Box>
+                            }
                         </div>
 
                         {/* popup */}
@@ -230,7 +242,7 @@ function MessageItem({ item }: props) {
                 }
             </ListItem>
 
-        </>
+        </div>
     )
 }
 
