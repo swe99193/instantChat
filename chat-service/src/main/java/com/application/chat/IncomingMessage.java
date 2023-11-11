@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class IncomingMessage {
 
-	private String contentType;
-	private String content;
+	public String contentType;
+	public String content;
 
 }

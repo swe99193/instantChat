@@ -17,6 +17,9 @@ spring:
             max-file-size: 100MB
             max-request-size: 100MB
 
+    kafka:
+        bootstrap-servers: localhost:9095
+        consumer.group-id: group-a
 
 server:
     port: 8080
@@ -34,11 +37,11 @@ amazon:
         bucketname: ${S3_BUCKET_NAME}
 
 
-rabbitmq:
-    host: localhost
-    port: 61613
-    username: guest
-    password: guest
+#rabbitmq:
+#    host: localhost
+#    port: 61613
+#    username: guest
+#    password: guest
 
 
 frontend:

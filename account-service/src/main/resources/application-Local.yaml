@@ -27,7 +27,7 @@ server:
             timeout: 360000  # session timeout, 100 hrs
 
             cookie:
-                same-site: None   # set cookie, https
+                same-site: Lax   # set cookie, https
 amazon:
     aws:
         accesskey: ${AWS_ACCESS_KEY}

@@ -20,6 +20,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security:3.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux:3.0.0'
 
+	// Kafka
+	implementation("org.springframework.kafka:spring-kafka:3.0.11")
 
 	compileOnly 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.projectlombok:lombok'
