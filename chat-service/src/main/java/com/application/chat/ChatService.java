@@ -5,6 +5,7 @@ import ChannelMappingServiceLib.findChannelIdRequest;
 import ChannelMappingServiceLib.findChannelIdResponse;
 import com.application.message_storage.Message;
 import com.application.message_storage.MessageService;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,12 +19,17 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class ChatService {
     // FIXME: gRPC client cannot be Autowired
@@ -33,6 +39,7 @@ public class ChatService {
 
     private final MessageService messageService;
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
 
     @Value("${amazon.s3.bucketname}")
@@ -40,9 +47,10 @@ public class ChatService {
 
 
     @Autowired
-    public ChatService(MessageService messageService, S3Client s3Client) {
+    public ChatService(MessageService messageService, S3Client s3Client, S3Presigner s3Presigner) {
         this.messageService = messageService;
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
     }
 
     /**
@@ -135,5 +143,38 @@ public class ChatService {
         return objectBytes.asByteArray();
     }
 
+    /**
+     * Get S3 temporary download url (Get Object).
+     */
+    // ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_Scenario_PresignedUrl_section.html
+    public String getPresignedUrl(String objectName, String receiver, String sender) {
+        //
+
+        // gRPC, get channel_id
+        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
+        String channelId = _res.getChannelId();
+
+
+        // check if file belongs to current channel by filename
+        if(!channelId.equals(objectName.split("/")[1]))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+
+        // get presigned url
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectName)
+                .build();
+
+        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofSeconds(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest);
+        String url = presignedGetObjectRequest.url().toString();
+        log.info("✅ presign url (GetObject): " + url);
+        return url;
+    }
 
 }

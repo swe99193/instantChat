@@ -57,7 +57,7 @@ public class ChatController {
 		String sender = principal.getName();
 
 		// save message to DynamoDB
-//		chatService.saveMessage(principal.getName(), receiver, incomingMessage.getContent(), incomingMessage.getContentType(), null, timestamp);
+		chatService.saveMessage(principal.getName(), receiver, incomingMessage.getContent(), incomingMessage.getContentType(), null, timestamp);
 
 		OutgoingMessage outgoingMessage = new OutgoingMessage(incomingMessage.contentType, incomingMessage.content, null, timestamp, sender, receiver, true);
 
@@ -125,6 +125,8 @@ public class ChatController {
 		Long timestamp = System.currentTimeMillis();
 		String sender = principal.getName();
 
+		// TODO: if an image, read height & width and store in DynamoDB
+
 		// S3 upload
 		String objectName = chatService.saveFile(sender, receiver, file);
 
@@ -150,12 +152,26 @@ public class ChatController {
 		}
 	}
 
-	@GetMapping("/message/file")
+	/**
+	 * Download file from S3
+	 * @see #getFileUrl
+	 */
+//	@GetMapping("/message/file")
 	public byte[] getFile(@RequestParam String filename, @RequestParam String receiver, Principal principal, HttpServletResponse response) throws Exception {
 		String sender = principal.getName();
 
 		response.setHeader("Content-Disposition", "attachment; filename="+ filename);
 		return chatService.getFile(filename, receiver, sender);
+	}
+
+	/**
+	 * Get temporary file download url.
+	 */
+	@GetMapping("/message/file/url")
+	public String getFileUrl(@RequestParam String filename, @RequestParam String receiver, Principal principal) throws Exception {
+		String sender = principal.getName();
+
+		return chatService.getPresignedUrl(filename, receiver, sender);
 	}
 
 }
