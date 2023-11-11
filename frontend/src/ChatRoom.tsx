@@ -97,6 +97,9 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
     const [scrollHeight, setScrollHeight] = useState(1000);
     const [scrollTop, setScrollTop] = useState(0);
 
+    const fetchAbortController = new AbortController(); // abort fetch request
+
+
     const handleSendClick = (message: string) => (event) => {
         if (message.length > 10000) {
             alert("🔴 Text size too large");
@@ -166,7 +169,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         const params = new URLSearchParams({
             username: username,
         });
-        const res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include" });
+
+        try {
+            var res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+        } catch (error) {
+            return;
+        }
 
         setStatusMessage((await res.json()).statusMessage);
     }
@@ -186,7 +194,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             pageSize: pageSize.toString(),
         });
 
-        const response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include" });
+        try {
+            var response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+        } catch (error) {
+            return;
+        }
+
         let messageList: Message[] = await response.json();
         // console.log(messageList);
 
@@ -250,10 +263,20 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                     receiver: receiver,
                 });
 
-                let res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include" });
+                try {
+                    var res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+                } catch (error) {
+                    return;
+                }
+
                 const s3objectUrl: String = await res.text();
 
-                res = await fetch(`${s3objectUrl}`);
+                try {
+                    res = await fetch(`${s3objectUrl}`, { signal: fetchAbortController.signal });
+                } catch (error) {
+                    return;
+                }
+
                 var fileBlob = await res.blob();
                 object_url = URL.createObjectURL(fileBlob);
 
@@ -389,6 +412,9 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             // unsubscribe from queue
             receiveSub.unsubscribe();
             echoSub.unsubscribe();
+
+            // abort targeted fetch requests
+            fetchAbortController.abort();
         }
 
     }, [receiver]); // re-render when receiver change
