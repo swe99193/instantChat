@@ -95,8 +95,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
 
     // control scroll position
     const [scrollHeight, setScrollHeight] = useState(1000);
-    const [scrollTop, setScrollTop] = useState(1000);
-
+    const [scrollTop, setScrollTop] = useState(0);
 
     const handleSendClick = (message: string) => (event) => {
         if (message.length > 10000) {
@@ -417,8 +416,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setScrollHeight(chatRoomRef.current.scrollHeight);
 
         if (layoutState == "receive") {
-            // stay at the same view
-            chatRoomRef.current.scrollTop = scrollTop - (chatRoomRef.current.scrollHeight - scrollHeight);    // current - previous height
+            if (scrollTop == 0)
+                // keep position at bottom
+                chatRoomRef.current.scrollTop = 0
+            else
+                // stay at the same view, consider the offset of the new messages
+                chatRoomRef.current.scrollTop = scrollTop - (chatRoomRef.current.scrollHeight - scrollHeight);    // current - previous height
             setLayoutState("normal");
         } else if (layoutState == "send") {
             // scroll to bottom
