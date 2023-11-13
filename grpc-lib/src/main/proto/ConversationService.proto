@@ -20,8 +20,8 @@ message FindConversationIdResponse {
 }
 
 message UpdateLatestMessageRequest {
-  string user1 = 1;
-  string user2 = 2;
+  string sender = 1;
+  string receiver = 2;
   string latest_message = 3;
   int64 latest_timestamp = 4;
 }
