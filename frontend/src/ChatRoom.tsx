@@ -70,7 +70,7 @@ function isImage(message: Message) {
 
 /**
  * Convert object name to filename.
- * Skip folder name & channel_id & random uuid.
+ * Skip folder name & conversation_id & random uuid.
  */
 function objectNameToFilename(objectName: string) {
     return (objectName).split("/").slice(2).join().split("_").slice(1).join();
