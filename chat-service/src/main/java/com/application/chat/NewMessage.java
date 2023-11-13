@@ -5,18 +5,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 /**
- * Standard message format.
+ *
  */
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-public class OutgoingMessage {
-
-	public String contentType;
+public class NewMessage {
 	public String content;
-	public Long fileSize;
 	public Long timestamp;
 
 	public String sender;

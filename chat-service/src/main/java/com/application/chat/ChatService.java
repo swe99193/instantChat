@@ -176,9 +176,9 @@ public class ChatService {
     /**
      * Update the latest message and timestamp of the conversation.
      */
-    public void updateConversationLatestMessage(String user1, String user2, String latestMessage, Long latestTimestamp){
+    public void updateConversationLatestMessage(String sender, String receiver, String latestMessage, Long latestTimestamp){
         // gRPC
-        UpdateLatestMessageRequest request = UpdateLatestMessageRequest.newBuilder().setUser1(user1).setUser2(user2).setLatestMessage(latestMessage).setLatestTimestamp(latestTimestamp).build();
+        UpdateLatestMessageRequest request = UpdateLatestMessageRequest.newBuilder().setSender(sender).setReceiver(receiver).setLatestMessage(latestMessage).setLatestTimestamp(latestTimestamp).build();
         UpdateLatestMessageResponse response = conversationService.updateLatestMessage(request);
     }
 }

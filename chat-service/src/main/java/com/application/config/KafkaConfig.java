@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class KafkaConfig {
 
     public static final String MESSAGE_TOPIC = "message";
+    public static final String NEW_MESSAGE_TOPIC = "newmessage";
 
     @Bean
     public NewTopic messageTopic() {
