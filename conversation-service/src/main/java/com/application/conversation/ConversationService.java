@@ -1,10 +1,13 @@
 package com.application.conversation;
 
 import ConversationServiceLib.*;
+import com.application.config.KafkaConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,10 +18,12 @@ import java.util.List;
 public class ConversationService extends ConversationServiceGrpc.ConversationServiceImplBase {
 
     private final ConversationRepository conversationRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public ConversationService(ConversationRepository conversationRepository) {
+    public ConversationService(ConversationRepository conversationRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.conversationRepository = conversationRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     /**
@@ -93,18 +98,39 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
     @Transactional
     @Override
     public void updateLatestMessage(UpdateLatestMessageRequest request, StreamObserver<UpdateLatestMessageResponse> responseObserver){
-        String user1 = request.getUser1();
-        String user2 = request.getUser2();
+        String sender = request.getSender();
+        String receiver = request.getReceiver();
         String latestMessage = request.getLatestMessage();
         Long latestTimestamp = request.getLatestTimestamp();
 
-        updateLatestMessage(user1, user2, latestMessage, latestTimestamp);
+        updateLatestMessage(sender, receiver, latestMessage, latestTimestamp);
 
-        log.info("🟢 gRPC conversation service updateLatestMessage: {}, {}", user1, user2);
+        log.info("🟢 gRPC conversation service updateLatestMessage: {}, {}", sender, receiver);
 
         UpdateLatestMessageResponse response = UpdateLatestMessageResponse.newBuilder().build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+
+        publishLatestMessage(sender, receiver, latestMessage, latestTimestamp);
+    }
+
+    /**
+     * Publish "newmessage" event to Kafka.
+     */
+    private void publishLatestMessage(String sender, String receiver, String latestMessage, Long latestTimestamp){
+        String topic = KafkaConfig.NEW_MESSAGE_TOPIC;
+        String key = String.format("%s.%s", sender, receiver);
+        NewMessage newMessage = new NewMessage(latestMessage, latestTimestamp, sender, receiver);
+
+        String message = "";
+
+        try{
+            message = new ObjectMapper().writeValueAsString(newMessage);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        kafkaTemplate.send(topic, key, message);
     }
 
 }

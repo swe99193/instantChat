@@ -19,6 +19,10 @@ spring:
             host: localhost # local
             port: 6379
 
+    kafka:
+        bootstrap-servers: localhost:9095
+        consumer.group-id: group-a
+
 server:
     port: 8081
 
