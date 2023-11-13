@@ -1,4 +1,14 @@
+# application configuration for local k8 minikube
+
 spring:
+    datasource:
+        username: ${PG_USERNAME}
+        password: ${PG_PASSWORD}
+        url: ${PG_URL}
+    jpa:
+        hibernate:
+            ddl-auto: update
+
     # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
     session:
         store:
@@ -14,31 +24,9 @@ spring:
 server:
     port: 8080
 
-amazon:
-    aws:
-        accesskey: ${AWS_ACCESS_KEY}
-        secretkey: ${AWS_SECRET_KEY}
-
 frontend:
     url: ${FRONTEND_URL}
 
 grpc:
     server:
         port: 9090
-
-    client:
-        # microservices
-        # find gRPC server by dns
-        # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
-
-        grpc-server-channel-mapping: # gRPC server name
-            address: 'dns:///channel-mapping-service:9090'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
-
-        grpc-server-conversation: # gRPC server name
-            address: 'dns:///conversation-service:9090'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext

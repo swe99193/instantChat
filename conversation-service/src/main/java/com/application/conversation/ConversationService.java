@@ -1,92 +1,110 @@
 package com.application.conversation;
 
-import ConversationServiceLib.ConversationServiceGrpc;
-import ConversationServiceLib.saveConversationRequest;
-import ConversationServiceLib.saveConversationResponse;
+import ConversationServiceLib.*;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
 
-//@Service
-@GrpcService
+
+@Slf4j
+@GrpcService // also include @Service
 public class ConversationService extends ConversationServiceGrpc.ConversationServiceImplBase {
 
-    private static final String tableName = "conversation";
-
-    private final DynamoDbClient client;
+    private final ConversationRepository conversationRepository;
 
     @Autowired
-    public ConversationService(DynamoDbClient client) {
-        this.client = client;
-    }
-
-    public void saveConversation(Conversation conversation) {
-        HashMap<String, AttributeValue> itemValues = new HashMap<>();
-        itemValues.put("username", AttributeValue.builder().s(conversation.getUsername()).build());
-        itemValues.put("chatUser", AttributeValue.builder().s(conversation.getChatUser()).build());
-
-        PutItemRequest request = PutItemRequest.builder()
-                .tableName(tableName)
-                .item(itemValues)
-                .build();
-
-        PutItemResponse response = client.putItem(request);
+    public ConversationService(ConversationRepository conversationRepository) {
+        this.conversationRepository = conversationRepository;
     }
 
     /**
-     * gRPC method, wrap internal function {@link ConversationService#saveConversation(Conversation) saveConversation}
+     * Get conversation list.
+     */
+    public List<Conversation> listConversation(String username) {
+        return conversationRepository.findByUser1OrUser2OrderByLatestTimestampDesc(username, username);
+    }
+
+
+    /**
+     * Get conversation id given two users.
+     * <p>
+     * If conversation id not found, create a new one, and create a new conversation record.
+    */
+    private String findConversationId(String user1, String user2){
+        // swap to ensure user1 < user2
+        if (user1.compareTo(user2) > 0){
+            String tmp = user1;
+            user1 = user2;
+            user2 = tmp;
+        }
+
+        String conversationId = conversationRepository.findConversationIdByUsers(user1, user2);
+
+        if (conversationId == null){
+            // create a new conversation
+            Conversation conversation = new Conversation(user1, user2);
+            conversation = conversationRepository.save(conversation);
+            conversationId = conversation.id.toString();
+        }
+
+        return conversationId;
+    }
+
+
+    /**
+     * gRPC method, wrap internal function {@link ConversationService#findConversationId(String, String) findConversationId}
      */
     @Override
-    public void saveConversation(saveConversationRequest req, StreamObserver<saveConversationResponse> responseObserver) {
-        System.out.printf("🟢 gRPC conversation-service: saveConversation   ---  %s\n", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
+    public void findConversationId(FindConversationIdRequest request, StreamObserver<FindConversationIdResponse> responseObserver){
+        String user1 = request.getUser1();
+        String user2 = request.getUser2();
 
-        saveConversation(new Conversation(req.getUsername(), req.getChatUser()));
+        String conversationId = findConversationId(user1, user2);
 
-        saveConversationResponse res = saveConversationResponse.newBuilder().build();
-        responseObserver.onNext(res);
+        log.info("🟢 gRPC conversation service findConversationId: {}", conversationId);
+
+        FindConversationIdResponse response = FindConversationIdResponse.newBuilder().setConversationId(conversationId).build();
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
     /**
-     * query the database based on the partition key "username"
-     * */
-    public List<Conversation> listConversation(String username){
-        System.out.printf("🟢 conversation-service: listConversation   ---  %s\n", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
-
-        // Set up an alias for the partition key name in case it's a reserved word.
-        HashMap<String,String> attrNameAlias = new HashMap<>();
-        attrNameAlias.put("#U", "username");
-
-
-        HashMap<String, AttributeValue> attrValues = new HashMap<>();
-        attrValues.put(":username", AttributeValue.builder().s(username).build());
-
-        QueryRequest request = QueryRequest.builder()
-                .tableName(tableName)
-                .keyConditionExpression("#U = :username")
-                .expressionAttributeNames(attrNameAlias)
-                .expressionAttributeValues(attrValues)
-                .build();
-
-        QueryResponse response = client.query(request);
-
-
-        // convert response items into list of Message
-        List<Conversation> conversations = new ArrayList<>();
-        for(Map<String, AttributeValue> item: response.items()){
-
-            Conversation message = new Conversation(
-                    item.get("username").s(),
-                    item.get("chatUser").s()
-            );
-            conversations.add(message);
+     * Update latest message and timestamp of the conversation.
+     */
+    @Transactional
+    private void updateLatestMessage(String user1, String user2, String latestMessage, Long latestTimestamp){
+        // swap to ensure user1 < user2
+        if (user1.compareTo(user2) > 0){
+            String tmp = user1;
+            user1 = user2;
+            user2 = tmp;
         }
 
-        return conversations;
+        conversationRepository.updateLatestMessage(user1, user2, latestMessage, latestTimestamp);
     }
+
+    /**
+     * gRPC method, wrap internal function {@link ConversationService#updateLatestMessage(String, String, String, Long) updateLatestMessage}
+     */
+    @Transactional
+    @Override
+    public void updateLatestMessage(UpdateLatestMessageRequest request, StreamObserver<UpdateLatestMessageResponse> responseObserver){
+        String user1 = request.getUser1();
+        String user2 = request.getUser2();
+        String latestMessage = request.getLatestMessage();
+        Long latestTimestamp = request.getLatestTimestamp();
+
+        updateLatestMessage(user1, user2, latestMessage, latestTimestamp);
+
+        log.info("🟢 gRPC conversation service updateLatestMessage: {}, {}", user1, user2);
+
+        UpdateLatestMessageResponse response = UpdateLatestMessageResponse.newBuilder().build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
 }
