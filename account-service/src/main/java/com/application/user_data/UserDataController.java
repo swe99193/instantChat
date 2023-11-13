@@ -1,7 +1,5 @@
 package com.application.user_data;
 
-import com.application.recovery.RecoveryRequest;
-import com.application.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -10,7 +8,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +16,7 @@ import java.util.Map;
 public class UserDataController {
     private final UserDataService userDataService;
 
-    private final List<String> supportedProfilePictureExtension = List.of("jpeg", "jpg", "gif", "png");
+    private final static List<String> IMAGE_EXTENSION = List.of("jpeg", "jpg", "gif", "png");
 
     @Autowired
     public UserDataController(UserDataService userDataService) {
@@ -42,7 +39,7 @@ public class UserDataController {
     public void updateProfilePicture(MultipartFile file, Principal principal) throws ResponseStatusException, IOException {
         List<String> filename = List.of(file.getOriginalFilename().split("\\."));
 
-        if(!supportedProfilePictureExtension.contains(filename.get(filename.size() - 1)))
+        if(filename.size() == 1 || !IMAGE_EXTENSION.contains(filename.get(filename.size() - 1)))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile picture supported extension: jpeg, jpg, gif, png");
 
 
