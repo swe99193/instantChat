@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Stomp from 'stompjs';
 
+// redux
+import { useAppSelector } from './redux/hooks';
+
 // mui
 import { Avatar, Badge, Box, IconButton, InputAdornment, List, ListItemAvatar, ListItemButton, ListItemText, TextField, Typography } from '@mui/material';
 
@@ -21,21 +24,24 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 
-interface conversation {
+interface Conversation {
     username: string,
     profilePictureUrl: string
+    latestMessage: string;
 }
 
 
 function ChatLayout() {
 
-    const [conversationList, setConversationList] = useState<conversation[]>([]);
-    const userMap = useRef({}); // a set of username in conversation list { username -> true }
+    const [conversationList, setConversationList] = useState<Conversation[]>([]);
+    const usernameSet = useRef(new Set()); // a set of username in conversation list
     const [receiver, setReceiver] = useState("");   // receiver of active conversation
     const [profilePictureUrl, setProfilePictureUrl] = useState(""); // object url of active conversation, passed to children components
 
     const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
+
+    const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
     // drawer
     const [open, setOpen] = useState(false);
@@ -52,11 +58,11 @@ function ChatLayout() {
             return;
         }
 
-        let list: Array<any> = await res.json();
+        const list: Array<any> = await res.json();
 
-        let arr = list.map(async (item) => {
-            const username = item.chatUser
-            userMap.current[username] = true;
+        const arr = list.map(async (item) => {
+            const username = item.user1 == currentUserId ? item.user2 : item.user1;
+            usernameSet.current.add(username);
 
             // fetch profile picture
             const objectUrl = await fetchProfilePicture(username);
@@ -64,7 +70,8 @@ function ChatLayout() {
             return {
                 username: username,
                 profilePictureUrl: objectUrl,
-            } as conversation;
+                latestMessage: item.latestMessage
+            } as Conversation;
         });
 
         setConversationList(await Promise.all(arr));
@@ -116,25 +123,26 @@ function ChatLayout() {
         setReceiver(username);
 
         // check if user in the list, and update conversation list
-        if (!(username in userMap.current)) {
+        if (!usernameSet.current.has(username)) {
 
             // fetch profile picture
             const objectUrl = await fetchProfilePicture(username);
 
             // insert new entry
-            const newEntry: conversation = {
+            const newEntry: Conversation = {
                 username: username,
                 profilePictureUrl: objectUrl,
+                latestMessage: ""
             }
 
             setProfilePictureUrl(objectUrl);
 
             setConversationList(conversations => {
-                return conversations.concat([newEntry]);
+                return [newEntry].concat(conversations);
             });
 
             // update username set
-            userMap.current[username] = true;
+            usernameSet.current.add(username);
         }
         else {
             setProfilePictureUrl(conversationList.filter(item => item.username == username)[0].profilePictureUrl);
@@ -218,8 +226,7 @@ function ChatLayout() {
                                             {item.username}
                                         </Typography>}
 
-                                    // TODO: display latest message
-                                    secondary={"latest message..."}
+                                    secondary={item.latestMessage}
                                 />
                                 {/* TODO: unread message counts */}
                                 {/* adjust Badge position: https://stackoverflow.com/questions/71399377/how-to-position-mui-badge-in-iconbutton-border-in-reactjs */}
