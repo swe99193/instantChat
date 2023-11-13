@@ -35,6 +35,8 @@ public class ChatController {
 
 	private final KafkaTemplate<String, String> kafkaTemplate;
 
+	private static final List<String> IMAGE_EXTENSION = List.of("jpeg", "jpg", "gif", "png");
+
 	@Autowired
 	public ChatController(SimpMessagingTemplate messagingTemplate, ChatService chatService, KafkaTemplate<String, String> kafkaTemplate) {
 		this.messagingTemplate = messagingTemplate;
@@ -58,6 +60,9 @@ public class ChatController {
 
 		// save message to DynamoDB
 		chatService.saveMessage(principal.getName(), receiver, incomingMessage.getContent(), incomingMessage.getContentType(), null, timestamp);
+
+		// update conversation latest message and timestamp
+		chatService.updateConversationLatestMessage(sender, receiver, incomingMessage.content, timestamp);
 
 		OutgoingMessage outgoingMessage = new OutgoingMessage(incomingMessage.contentType, incomingMessage.content, null, timestamp, sender, receiver, true);
 
@@ -134,6 +139,12 @@ public class ChatController {
 
 		// save message to DynamoDB
 		chatService.saveMessage(sender, receiver, objectName, incomingMessageFile.contentType, file.getSize(), timestamp);
+
+		List<String> filename = List.of(file.getOriginalFilename().split("\\."));
+		String text = filename.size() != 1 && IMAGE_EXTENSION.contains(filename.get(filename.size() - 1)) ? "You send a photo" : "You send a file";
+
+		// update conversation latest message and timestamp
+		chatService.updateConversationLatestMessage(sender, receiver, text, timestamp);
 
 		OutgoingMessage outgoingMessage = new OutgoingMessage(incomingMessageFile.contentType, objectName, file.getSize(), System.currentTimeMillis(), sender, receiver, true);
 
