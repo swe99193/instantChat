@@ -122,13 +122,15 @@ public class ChatController {
 
 		// set the file content
 		MultipartFile file = incomingMessageFile.file;
-		Long timestamp = System.currentTimeMillis();
 		String sender = principal.getName();
 
 		// TODO: if an image, read height & width and store in DynamoDB
 
 		// S3 upload
 		String objectName = chatService.saveFile(sender, receiver, file);
+
+		// set timestamp after file upload
+		Long timestamp = System.currentTimeMillis();
 
 		// save message to DynamoDB
 		chatService.saveMessage(sender, receiver, objectName, incomingMessageFile.contentType, file.getSize(), timestamp);
