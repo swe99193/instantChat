@@ -1,8 +1,11 @@
 package com.application.chat;
 
-import ChannelMappingServiceLib.ChannelMappingServiceGrpc.ChannelMappingServiceBlockingStub;
-import ChannelMappingServiceLib.findChannelIdRequest;
-import ChannelMappingServiceLib.findChannelIdResponse;
+
+import ConversationServiceLib.ConversationServiceGrpc.ConversationServiceBlockingStub;
+import ConversationServiceLib.FindConversationIdRequest;
+import ConversationServiceLib.FindConversationIdResponse;
+import ConversationServiceLib.UpdateLatestMessageRequest;
+import ConversationServiceLib.UpdateLatestMessageResponse;
 import com.application.message_storage.Message;
 import com.application.message_storage.MessageService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +37,8 @@ import java.util.UUID;
 public class ChatService {
     // FIXME: gRPC client cannot be Autowired
 
-    @GrpcClient("grpc-server-channel-mapping")
-    private ChannelMappingServiceBlockingStub channelMappingService;
+    @GrpcClient("grpc-server-conversation")
+    private ConversationServiceBlockingStub conversationService;
 
     private final MessageService messageService;
     private final S3Client s3Client;
@@ -57,29 +60,24 @@ public class ChatService {
      * save to DynamoDB
      */
     public void saveMessage(String sender, String receiver, String content, String contentType, Long fileSize, Long timestamp){
-//        String channelId = channelMappingService.findChannelId(sender, receiver);
+        // gRPC, get conversation id
+        FindConversationIdRequest request = FindConversationIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        FindConversationIdResponse response = conversationService.findConversationId(request);
+        String conversationId = response.getConversationId();
 
-        // gRPC, get channelId
-        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
-        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
-        String channelId = _res.getChannelId();
-
-        Message message = new Message(channelId, timestamp, sender, receiver, contentType, content, fileSize);
+        Message message = new Message(conversationId, timestamp, sender, receiver, contentType, content, fileSize);
 
         // save to dynamodb
         messageService.saveMessage(message);
     }
 
     public List<Message> listMessage(String sender, String receiver, Long timestamp, Integer pageSize){
+        // gRPC, get conversation id
+        FindConversationIdRequest request = FindConversationIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        FindConversationIdResponse response = conversationService.findConversationId(request);
+        String conversationId = response.getConversationId();
 
-//        String channel_id = channelMappingService.findChannelId(sender, receiver);
-
-        // gRPC, get channel_id
-        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
-        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
-        String channelId = _res.getChannelId();
-
-        List<Message> messageList = messageService.listMessage(channelId, timestamp, pageSize);
+        List<Message> messageList = messageService.listMessage(conversationId, timestamp, pageSize);
 
         return messageList;
     }
@@ -87,19 +85,17 @@ public class ChatService {
     /**
      * upload to S3
      * <p>
-     * filename format: file-message/(channel id)/(random UUID)_(original filename)
+     * filename format: file-message/(conversation id)/(random UUID)_(original filename)
      */
     public String saveFile(String sender, String receiver, MultipartFile file) throws IOException {
-//        String channel_id = channelMappingService.findChannelId(sender, receiver);
-
-        // gRPC, get channel_id
-        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
-        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
-        String channelId = _res.getChannelId();
+        // gRPC, get conversation id
+        FindConversationIdRequest request = FindConversationIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        FindConversationIdResponse response = conversationService.findConversationId(request);
+        String conversationId = response.getConversationId();
 
 
-        //  filename format: file-message/<channel id>/<random UUID>_<original filename>
-        String objectName = String.format("file-message/%s/%s_%s", channelId, UUID.randomUUID().toString(), file.getOriginalFilename());
+        //  filename format: file-message/<conversation id>/<random UUID>_<original filename>
+        String objectName = String.format("file-message/%s/%s_%s", conversationId, UUID.randomUUID().toString(), file.getOriginalFilename());
 
 
         // store to S3
@@ -120,14 +116,14 @@ public class ChatService {
      */
     public byte[] getFile(String objectName, String receiver, String sender) throws Exception {
 
-        // gRPC, get channel_id
-        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
-        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
-        String channelId = _res.getChannelId();
+        // gRPC, get conversation id
+        FindConversationIdRequest request = FindConversationIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        FindConversationIdResponse response = conversationService.findConversationId(request);
+        String conversationId = response.getConversationId();
 
 
-        // check if file belongs to current channel by filename
-        if(!channelId.equals(objectName.split("/")[1]))
+        // check if file belongs to current conversation by filename
+        if(!conversationId.equals(objectName.split("/")[1]))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
 
@@ -150,14 +146,14 @@ public class ChatService {
     public String getPresignedUrl(String objectName, String receiver, String sender) {
         //
 
-        // gRPC, get channel_id
-        findChannelIdRequest _req = findChannelIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
-        findChannelIdResponse _res = channelMappingService.findChannelId(_req);
-        String channelId = _res.getChannelId();
+        // gRPC, get conversation id
+        FindConversationIdRequest request = FindConversationIdRequest.newBuilder().setUser1(sender).setUser2(receiver).build();
+        FindConversationIdResponse response = conversationService.findConversationId(request);
+        String conversationId = response.getConversationId();
 
 
-        // check if file belongs to current channel by filename
-        if(!channelId.equals(objectName.split("/")[1]))
+        // check if file belongs to current conversation by filename
+        if(!conversationId.equals(objectName.split("/")[1]))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         // get presigned url
@@ -177,4 +173,12 @@ public class ChatService {
         return url;
     }
 
+    /**
+     * Update the latest message and timestamp of the conversation.
+     */
+    public void updateConversationLatestMessage(String user1, String user2, String latestMessage, Long latestTimestamp){
+        // gRPC
+        UpdateLatestMessageRequest request = UpdateLatestMessageRequest.newBuilder().setUser1(user1).setUser2(user2).setLatestMessage(latestMessage).setLatestTimestamp(latestTimestamp).build();
+        UpdateLatestMessageResponse response = conversationService.updateLatestMessage(request);
+    }
 }
