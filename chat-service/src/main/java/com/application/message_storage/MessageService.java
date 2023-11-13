@@ -43,15 +43,15 @@ public class MessageService {
      */
     public void saveMessage(Message message) {
         HashMap<String,AttributeValue> itemValues = new HashMap<>();
-        itemValues.put("channel_id", AttributeValue.builder().s(message.getChannelId()).build());
-        itemValues.put("timestamp", AttributeValue.builder().n(message.getTimestamp().toString()).build());
-        itemValues.put("sender", AttributeValue.builder().s(message.getSender()).build());
-        itemValues.put("receiver", AttributeValue.builder().s(message.getReceiver()).build());
-        itemValues.put("content_type", AttributeValue.builder().s(message.getContentType()).build());
-        itemValues.put("content", AttributeValue.builder().s(message.getContent()).build());
+        itemValues.put("conversation_id", AttributeValue.builder().s(message.conversationId).build());
+        itemValues.put("timestamp", AttributeValue.builder().n(message.timestamp.toString()).build());
+        itemValues.put("sender", AttributeValue.builder().s(message.sender).build());
+        itemValues.put("receiver", AttributeValue.builder().s(message.receiver).build());
+        itemValues.put("content_type", AttributeValue.builder().s(message.contentType).build());
+        itemValues.put("content", AttributeValue.builder().s(message.content).build());
 
-        if(message.getFileSize() != null)
-            itemValues.put("file_size", AttributeValue.builder().n(message.getFileSize().toString()).build());
+        if(message.fileSize != null)
+            itemValues.put("file_size", AttributeValue.builder().n(message.fileSize.toString()).build());
 
         PutItemRequest request = PutItemRequest.builder()
                 .tableName(tableName)
@@ -62,25 +62,23 @@ public class MessageService {
     }
 
     /**
-     * Query the database based on the partition key "channel id" and sort key "timestamp".
+     * Query the database based on the partition key "conversation_id" and sort key "timestamp".
      *
      * Pagination by timestamp.
      */
-    public List<Message> listMessage(String channelId, Long timestamp, Integer pageSize){
+    public List<Message> listMessage(String conversationId, Long timestamp, Integer pageSize){
         // Set up an alias for the partition key name in case it's a reserved word.
         HashMap<String,String> attrNameAlias = new HashMap<String,String>();
         attrNameAlias.put("#T", "timestamp");
 
 
         HashMap<String, AttributeValue> attrValues = new HashMap<>();
-
-        attrValues.put(":channel_id", AttributeValue.builder().s(channelId).build());
+        attrValues.put(":conversation_id", AttributeValue.builder().s(conversationId).build());
         attrValues.put(":timestamp", AttributeValue.builder().n(timestamp.toString()).build());
 
         QueryRequest request = QueryRequest.builder()
                 .tableName(tableName)
-//                .keyConditionExpression("channel_i    d = :channel_id")
-                .keyConditionExpression("channel_id = :channel_id AND #T < :timestamp")
+                .keyConditionExpression("conversation_id = :conversation_id AND #T < :timestamp")
                 .expressionAttributeNames(attrNameAlias)
                 .expressionAttributeValues(attrValues)
                 .scanIndexForward(false)
@@ -97,7 +95,7 @@ public class MessageService {
         for(Map<String, AttributeValue> item: response.items()){
 
             Message message = new Message(
-                    item.get("channel_id").s(),
+                    item.get("conversation_id").s(),
                     Long.valueOf(item.get("timestamp").n()),
                     item.get("sender").s(),
                     item.get("receiver").s(),
