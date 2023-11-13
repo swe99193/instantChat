@@ -1,4 +1,4 @@
-package com.application.chat;
+package com.application.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -123,7 +123,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/websocket").setAllowedOrigins(frontendUrl);
+		registry.addEndpoint("/chat/websocket").setAllowedOrigins(frontendUrl);
 	}
 
 	@Override
