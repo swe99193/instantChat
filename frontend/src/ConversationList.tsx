@@ -42,15 +42,24 @@ function ConversationList({ receiver, conversationList, conversationOnClick }: p
                         <ListItemText
                             primary={
                                 <Typography
-                                    sx={{ display: 'inline' }}
-                                    component="span"
-                                    variant="body2"
+                                    sx={{ fontSize: "14px" }}
+                                    component="div"
                                     color="text.primary"
+                                    noWrap
                                 >
                                     {item.username}
-                                </Typography>}
+                                </Typography>
+                            }
 
-                            secondary={item.latestMessage}
+                            secondary={
+                                <Typography
+                                    sx={{ fontSize: "12px", color: "grey" }}
+                                    component="div"
+                                    noWrap
+                                >
+                                    {item.latestMessage}
+                                </Typography>
+                            }
                         />
                         {/* TODO: unread message counts */}
                         {/* adjust Badge position: https://stackoverflow.com/questions/71399377/how-to-position-mui-badge-in-iconbutton-border-in-reactjs */}
