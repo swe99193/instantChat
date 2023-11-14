@@ -1,12 +1,7 @@
-import { useEffect, useState } from "react";
-import Stomp from 'stompjs';
-
-
 // mui
-import { Avatar, Badge, Box, Button, InputLabel, Link, List, ListItemAvatar, ListItemButton, ListItemText, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Avatar, List, ListItemAvatar, ListItemButton, ListItemText, Typography } from "@mui/material";
 
 // types
-import { NewMessage } from "./types/NewMessage.types";
 import { Conversation } from "./types/Conversation.types";
 
 
