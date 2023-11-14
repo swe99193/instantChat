@@ -97,7 +97,7 @@ public class ChatController {
 		chatService.saveMessage(sender, receiver, objectName, incomingMessageFile.contentType, file.getSize(), timestamp);
 
 		List<String> filename = List.of(file.getOriginalFilename().split("\\."));
-		String text = filename.size() != 1 && IMAGE_EXTENSION.contains(filename.get(filename.size() - 1)) ? "You send a photo" : "You send a file";
+		String text = filename.size() != 1 && IMAGE_EXTENSION.contains(filename.get(filename.size() - 1)) ? "(photo)" : "(file)";
 
 		// update conversation latest message and timestamp
 		chatService.updateConversationLatestMessage(sender, receiver, text, timestamp);
