@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "ConversationServiceLib";
+option java_outer_classname = "ConversationServiceProto";
+
+// Note: service name will be the prefix of the gRPC Bean
+service ConversationService {
+  rpc findConversationId (FindConversationIdRequest) returns (FindConversationIdResponse) {}
+  rpc updateLatestMessage (UpdateLatestMessageRequest) returns (UpdateLatestMessageResponse) {}
+}
+
+message FindConversationIdRequest {
+  string user1 = 1;
+  string user2 = 2;
+}
+
+message FindConversationIdResponse {
+  string conversation_id = 1;
+}
+
+message UpdateLatestMessageRequest {
+  string sender = 1;
+  string receiver = 2;
+  string latest_message = 3;
+  int64 latest_timestamp = 4;
+}
+
+message UpdateLatestMessageResponse {
+}

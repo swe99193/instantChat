@@ -1,4 +1,4 @@
-package com.application.chat;
+package com.application.conversation;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,17 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Standard message format.
+ * message format used in "new message" event
  */
 @AllArgsConstructor
 @Getter
 @Setter
 @NoArgsConstructor
-public class OutgoingMessage {
-
-	public String contentType;
+public class NewMessage {
 	public String content;
-	public Long fileSize;
 	public Long timestamp;
 
 	public String sender;

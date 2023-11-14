@@ -1,5 +1,12 @@
-# application configuration for local k8 minikube
 spring:
+    datasource:
+        username: postgres
+        password: postgres
+        url: jdbc:postgresql://localhost:8050/InstantChat
+    jpa:
+        hibernate:
+            ddl-auto: update
+
     # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
     session:
         store:
@@ -12,58 +19,16 @@ spring:
             host: localhost # local
             port: 6379
 
-server:
-    port: 8082
+    kafka:
+        bootstrap-servers: localhost:9095
+        consumer.group-id: group-a
 
-amazon:
-    aws:
-        accesskey: ${AWS_ACCESS_KEY}
-        secretkey: ${AWS_SECRET_KEY}
+server:
+    port: 8081
 
 frontend:
-    url: ${FRONTEND_URL}
+    url: http://localhost:3000
 
 grpc:
     server:
-        port: 9090
-
-    client:
-        #        # monolith, single server
-        #        grpc-server-message: # gRPC server name
-        #            address: 'static://127.0.0.1:9090'
-        #            enableKeepAlive: true
-        #            keepAliveWithoutCalls: true
-        #            negotiationType: plaintext
-        #
-        #        grpc-server-channel-mapping: # gRPC server name
-        #            address: 'static://127.0.0.1:9090'
-        #            enableKeepAlive: true
-        #            keepAliveWithoutCalls: true
-        #            negotiationType: plaintext
-        #
-        #        grpc-server-conversation: # gRPC server name
-        #            address: 'static://127.0.0.1:9090'
-        #            enableKeepAlive: true
-        #            keepAliveWithoutCalls: true
-        #            negotiationType: plaintext
-
-        # microservices
-        # find gRPC server by dns
-        # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
-        grpc-server-message: # gRPC server name
-            address: 'dns:///message-gRPC-service:9090'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
-
-        grpc-server-channel-mapping: # gRPC server name
-            address: 'dns:///channel-mapping-gRPC-service:9090'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
-
-        grpc-server-conversation: # gRPC server name
-            address: 'dns:///conversation-gRPC-service:9090'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
+        port: 9091

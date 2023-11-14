@@ -3,6 +3,7 @@ package com.application;
 import com.application.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 
+@Slf4j
 @RestController
 public class IndexController {
 
@@ -36,9 +38,9 @@ public class IndexController {
     @GetMapping("/auth")
     public String authenticateSessionUser(Principal principal) {
         if(principal != null)
-            System.out.println("✅ Principal name: " + principal.getName());
+            log.info("✅ Principal name: " + principal.getName());
         else
-            System.out.println("❌ Principal null");
+            log.info("❌ Principal null");
         return principal != null? principal.getName(): null;
     }
 
@@ -50,7 +52,7 @@ public class IndexController {
      */
     @PostMapping("/login")
     public void login(@RequestBody User loginRequest, HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("🔴 custom login processing");
+        log.info("🔴 custom login processing");
 
         UsernamePasswordAuthenticationToken token = UsernamePasswordAuthenticationToken.unauthenticated(
                 loginRequest.getUsername(), loginRequest.getPassword());
@@ -68,7 +70,7 @@ public class IndexController {
 
         securityContextRepository.saveContext(context, request, response);
 
-        System.out.println("✅ custom login succeed");
+        log.info("✅ custom login succeed");
     }
 
 

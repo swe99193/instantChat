@@ -53,20 +53,8 @@ grpc:
         port: 9090
 
     client:
-        grpc-server-message: # gRPC server name
-            address: 'static://127.0.0.1:9093'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
-
-        grpc-server-channel-mapping: # gRPC server name
-            address: 'static://127.0.0.1:9091'
-            enableKeepAlive: true
-            keepAliveWithoutCalls: true
-            negotiationType: plaintext
-
         grpc-server-conversation: # gRPC server name
-            address: 'static://127.0.0.1:9092'
+            address: 'static://127.0.0.1:9091'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext

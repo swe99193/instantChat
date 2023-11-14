@@ -70,7 +70,7 @@ function isImage(message: Message) {
 
 /**
  * Convert object name to filename.
- * Skip folder name & channel_id & random uuid.
+ * Skip folder name & conversation_id & random uuid.
  */
 function objectNameToFilename(objectName: string) {
     return (objectName).split("/").slice(2).join().split("_").slice(1).join();
@@ -95,7 +95,9 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
 
     // control scroll position
     const [scrollHeight, setScrollHeight] = useState(1000);
-    const [scrollTop, setScrollTop] = useState(1000);
+    const [scrollTop, setScrollTop] = useState(0);
+
+    const fetchAbortController = new AbortController(); // abort fetch request
 
 
     const handleSendClick = (message: string) => (event) => {
@@ -167,7 +169,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         const params = new URLSearchParams({
             username: username,
         });
-        const res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include" });
+
+        try {
+            var res = await fetch(`${BACKEND_URL}/user-data?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+        } catch (error) {
+            return;
+        }
 
         setStatusMessage((await res.json()).statusMessage);
     }
@@ -187,7 +194,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             pageSize: pageSize.toString(),
         });
 
-        const response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include" });
+        try {
+            var response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+        } catch (error) {
+            return;
+        }
+
         let messageList: Message[] = await response.json();
         // console.log(messageList);
 
@@ -251,10 +263,20 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                     receiver: receiver,
                 });
 
-                let res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include" });
+                try {
+                    var res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+                } catch (error) {
+                    return;
+                }
+
                 const s3objectUrl: String = await res.text();
 
-                res = await fetch(`${s3objectUrl}`);
+                try {
+                    res = await fetch(`${s3objectUrl}`, { signal: fetchAbortController.signal });
+                } catch (error) {
+                    return;
+                }
+
                 var fileBlob = await res.blob();
                 object_url = URL.createObjectURL(fileBlob);
 
@@ -390,6 +412,9 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
             // unsubscribe from queue
             receiveSub.unsubscribe();
             echoSub.unsubscribe();
+
+            // abort targeted fetch requests
+            fetchAbortController.abort();
         }
 
     }, [receiver]); // re-render when receiver change
@@ -417,8 +442,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setScrollHeight(chatRoomRef.current.scrollHeight);
 
         if (layoutState == "receive") {
-            // stay at the same view
-            chatRoomRef.current.scrollTop = scrollTop - (chatRoomRef.current.scrollHeight - scrollHeight);    // current - previous height
+            if (scrollTop == 0)
+                // keep position at bottom
+                chatRoomRef.current.scrollTop = 0
+            else
+                // stay at the same view, consider the offset of the new messages
+                chatRoomRef.current.scrollTop = scrollTop - (chatRoomRef.current.scrollHeight - scrollHeight);    // current - previous height
             setLayoutState("normal");
         } else if (layoutState == "send") {
             // scroll to bottom

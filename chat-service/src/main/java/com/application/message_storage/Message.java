@@ -10,11 +10,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Message {
-    private String channelId;
-    private Long timestamp;
-    private String sender;
-    private String receiver;
-    private String contentType;
-    private String content;
-    private Long fileSize;
+    public String conversationId;
+    public Long timestamp;
+    public String sender;
+    public String receiver;
+    public String contentType;
+    public String content;
+    public Long fileSize;
 }

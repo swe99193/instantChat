@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Stomp from 'stompjs';
 
+// redux
+import { useAppSelector } from './redux/hooks';
+
 // mui
 import { Avatar, Badge, Box, IconButton, InputAdornment, List, ListItemAvatar, ListItemButton, ListItemText, TextField, Typography } from '@mui/material';
 
@@ -10,9 +13,14 @@ import { Menu, Search } from '@mui/icons-material';
 // components
 import ChatRoom from './ChatRoom';
 import NavigationDrawer from './NavigationDrawer';
+import ConversationList from './ConversationList';
 
 // utils
 import { fetchProfilePicture } from './utils/fetchProfilePicture';
+
+// types
+import { Conversation } from './types/Conversation.types';
+import { NewMessage } from './types/NewMessage.types';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -21,21 +29,17 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 
-interface conversation {
-    username: string,
-    profilePictureUrl: string
-}
-
-
 function ChatLayout() {
 
-    const [conversationList, setConversationList] = useState<conversation[]>([]);
-    const userMap = useRef({}); // a set of username in conversation list { username -> true }
+    const [conversationList, setConversationList] = useState<Conversation[]>([]);
+    const usernameSet = useRef(new Set()); // a set of username in conversation list
     const [receiver, setReceiver] = useState("");   // receiver of active conversation
     const [profilePictureUrl, setProfilePictureUrl] = useState(""); // object url of active conversation, passed to children components
 
     const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
+
+    const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
     // drawer
     const [open, setOpen] = useState(false);
@@ -52,11 +56,11 @@ function ChatLayout() {
             return;
         }
 
-        let list: Array<any> = await res.json();
+        const list: any[] = await res.json();
 
-        let arr = list.map(async (item) => {
-            const username = item.chatUser
-            userMap.current[username] = true;
+        const arr = list.map(async (item) => {
+            const username = item.user1 == currentUserId ? item.user2 : item.user1;
+            usernameSet.current.add(username);
 
             // fetch profile picture
             const objectUrl = await fetchProfilePicture(username);
@@ -64,7 +68,9 @@ function ChatLayout() {
             return {
                 username: username,
                 profilePictureUrl: objectUrl,
-            } as conversation;
+                latestMessage: item.latestMessage,
+                latestTimestamp: item.latestTimestamp
+            } as Conversation;
         });
 
         setConversationList(await Promise.all(arr));
@@ -116,38 +122,80 @@ function ChatLayout() {
         setReceiver(username);
 
         // check if user in the list, and update conversation list
-        if (!(username in userMap.current)) {
+        if (!usernameSet.current.has(username)) {
 
             // fetch profile picture
             const objectUrl = await fetchProfilePicture(username);
 
             // insert new entry
-            const newEntry: conversation = {
+            const newEntry: Conversation = {
                 username: username,
                 profilePictureUrl: objectUrl,
+                latestMessage: "",
+                latestTimestamp: new Date().getTime()   // TODO: save this timestamp to db
             }
 
             setProfilePictureUrl(objectUrl);
 
             setConversationList(conversations => {
-                return conversations.concat([newEntry]);
+                return [newEntry].concat(conversations);
             });
 
             // update username set
-            userMap.current[username] = true;
+            usernameSet.current.add(username);
         }
         else {
             setProfilePictureUrl(conversationList.filter(item => item.username == username)[0].profilePictureUrl);
         }
     }
 
+    const handleReceive = async (message: NewMessage) => {
+        // update latest message & timestamp
+        // update new conversation order
+        if (message.sender == currentUserId) {
+            // echo new message
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    latestMessage: item.username == message.receiver ? message.content : item.latestMessage,
+                    latestTimestamp: item.username == message.receiver ? message.timestamp : item.latestTimestamp
+                }
+            }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
+        }
+        else {
+            // receive new message 
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    latestMessage: item.username == message.sender ? message.content : item.latestMessage,
+                    latestTimestamp: item.username == message.sender ? message.timestamp : item.latestTimestamp
+                }
+            }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
+        }
+    }
+
+
     useEffect(() => {
         fetchConversation();
+
+        var newMessageSub: Stomp.Subscription;
 
         stompClient.current.connect({}, function (frame) {
             console.log('Connected: ' + frame);
             setIsConnected(true);
+
+            newMessageSub = stompClient.current.subscribe(`/user/queue/global.newmessage`, function (message) {
+                handleReceive(JSON.parse(message.body));
+            });
+
         });
+
+        return function cleanup() {
+            // unsubscribe from queue
+            newMessageSub.unsubscribe();
+        }
     }, []);
 
 
@@ -190,44 +238,7 @@ function ChatLayout() {
                     />
                 </div>
 
-                {/* Conversation list */}
-                <List>
-                    {
-                        conversationList.map((item, idx) =>
-                            <ListItemButton alignItems="flex-start" selected={receiver == item.username} onClick={ConversationOnClick(item.username)} sx={{ borderRadius: "5px", margin: "3px 5px" }}>
-                                <ListItemAvatar>
-                                    {/* TODO: online status */}
-                                    {/* <Badge variant="dot" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} color="success" invisible={false} sx={{
-                                        '& .MuiBadge-badge': {
-                                            backgroundColor: '#32cd32',
-                                            color: '#32cd32',
-                                            boxShadow: `0 0 0 2px white`,
-                                        },
-                                    }} overlap="circular"> */}
-                                    <Avatar src={item.profilePictureUrl} />
-                                    {/* </Badge> */}
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={
-                                        <Typography
-                                            sx={{ display: 'inline' }}
-                                            component="span"
-                                            variant="body2"
-                                            color="text.primary"
-                                        >
-                                            {item.username}
-                                        </Typography>}
-
-                                    // TODO: display latest message
-                                    secondary={"latest message..."}
-                                />
-                                {/* TODO: unread message counts */}
-                                {/* adjust Badge position: https://stackoverflow.com/questions/71399377/how-to-position-mui-badge-in-iconbutton-border-in-reactjs */}
-                                <Badge badgeContent={4} color="error" invisible={false} style={{ transform: 'translate(0px, 25px)' }}></Badge>
-                            </ListItemButton>
-                        )
-                    }
-                </List>
+                <ConversationList receiver={receiver} conversationList={conversationList} conversationOnClick={ConversationOnClick} />
             </Box>
 
             {/* chat contrainer */}
