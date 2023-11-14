@@ -20,7 +20,7 @@ import { fetchProfilePicture } from './utils/fetchProfilePicture';
 
 // types
 import { Conversation } from './types/Conversation.types';
-import { NewMessage } from './types/NewMessage.types';
+import { NewMessageEvent } from './types/NewMessageEvent.types';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -149,7 +149,7 @@ function ChatLayout() {
         }
     }
 
-    const handleReceive = async (message: NewMessage) => {
+    const handleNewMessageEvent = async (message: NewMessageEvent) => {
         // update latest message & timestamp
         // update new conversation order
         if (message.sender == currentUserId) {
@@ -187,7 +187,7 @@ function ChatLayout() {
             setIsConnected(true);
 
             newMessageSub = stompClient.current.subscribe(`/user/queue/global.newmessage`, function (message) {
-                handleReceive(JSON.parse(message.body));
+                handleNewMessageEvent(JSON.parse(message.body));
             });
 
         });
