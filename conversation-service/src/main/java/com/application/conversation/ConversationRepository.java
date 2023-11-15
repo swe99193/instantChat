@@ -28,4 +28,17 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
     void updateLatestMessage(@Param("user1") String user1, @Param("user2") String user2, @Param("latest_message") String latestMessage, @Param("latest_timestamp") Long latestTimestamp);
 
 
+    @Modifying
+    @Query(
+            value = "UPDATE conversation SET last_read_user1 = :timestamp WHERE user1 = :user1 AND user2 = :user2",
+            nativeQuery = true)
+    void updateLastRead1(@Param("user1") String user1, @Param("user2") String user2, @Param("timestamp") Long timestamp);
+
+    @Modifying
+    @Query(
+            value = "UPDATE conversation SET last_read_user2 = :timestamp WHERE user1 = :user1 AND user2 = :user2",
+            nativeQuery = true)
+    void updateLastRead2(@Param("user1") String user1, @Param("user2") String user2, @Param("timestamp") Long timestamp);
+
+
 }

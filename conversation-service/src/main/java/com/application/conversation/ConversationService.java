@@ -126,11 +126,70 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
 
         try{
             message = new ObjectMapper().writeValueAsString(newMessage);
+            kafkaTemplate.send(topic, key, message);
         } catch(Exception e) {
             e.printStackTrace();
         }
 
-        kafkaTemplate.send(topic, key, message);
+    }
+
+
+    /**
+     * gRPC method, wrap internal function {@link ConversationService#updateLastRead(String, String, Long, String) updateLatestMessage}
+     */
+    @Transactional
+    @Override
+    public void updateLastRead(UpdateLastReadRequest request, StreamObserver<UpdateLastReadResponse> responseObserver){
+        String sender = request.getSender();
+        String receiver = request.getReceiver();
+        Long timestamp = request.getTimestamp();
+
+        updateLastRead(sender, receiver, timestamp, sender);
+
+        log.info("🟢 gRPC conversation service updateRead: {}, {}", sender, receiver);
+
+        UpdateLastReadResponse response = UpdateLastReadResponse.newBuilder().build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+        publishReadEvent(sender, receiver, timestamp);
+    }
+
+    /**
+     * Update last read.
+     */
+    @Transactional
+    private void updateLastRead(String user1, String user2, Long timestamp, String sender){
+        // swap to ensure user1 < user2
+        if (user1.compareTo(user2) > 0){
+            String tmp = user1;
+            user1 = user2;
+            user2 = tmp;
+        }
+
+        if(sender.equals(user1))
+            conversationRepository.updateLastRead1(user1, user2, timestamp);
+        else
+            conversationRepository.updateLastRead2(user1, user2, timestamp);
+    }
+
+    /**
+     * Publish "read" event to Kafka.
+     */
+    private void publishReadEvent(String sender, String receiver, Long timestamp){
+        String topic = KafkaConfig.READ_TOPIC;
+        String key = String.format("%s.%s", sender, receiver);
+        ReadEvent event = new ReadEvent(timestamp, sender, receiver);
+
+        String message = "";
+
+        try{
+            message = new ObjectMapper().writeValueAsString(event);
+            kafkaTemplate.send(topic, key, message);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
