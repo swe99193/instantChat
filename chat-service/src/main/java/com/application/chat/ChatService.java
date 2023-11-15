@@ -1,11 +1,8 @@
 package com.application.chat;
 
 
+import ConversationServiceLib.*;
 import ConversationServiceLib.ConversationServiceGrpc.ConversationServiceBlockingStub;
-import ConversationServiceLib.FindConversationIdRequest;
-import ConversationServiceLib.FindConversationIdResponse;
-import ConversationServiceLib.UpdateLatestMessageRequest;
-import ConversationServiceLib.UpdateLatestMessageResponse;
 import com.application.message_storage.Message;
 import com.application.message_storage.MessageService;
 import lombok.extern.slf4j.Slf4j;
@@ -180,5 +177,14 @@ public class ChatService {
         // gRPC
         UpdateLatestMessageRequest request = UpdateLatestMessageRequest.newBuilder().setSender(sender).setReceiver(receiver).setLatestMessage(latestMessage).setLatestTimestamp(latestTimestamp).build();
         UpdateLatestMessageResponse response = conversationService.updateLatestMessage(request);
+    }
+
+    /**
+     * Update the read timestamp (of a user) of the conversation.
+     */
+    public void updateConversationRead(String sender, String receiver, Long timestamp){
+        // gRPC
+        UpdateLastReadRequest request = UpdateLastReadRequest.newBuilder().setSender(sender).setReceiver(receiver).setTimestamp(timestamp).build();
+        UpdateLastReadResponse response = conversationService.updateLastRead(request);
     }
 }

@@ -68,4 +68,24 @@ public class KafkaService {
         messagingTemplate.convertAndSendToUser(sender, "/queue/global.newmessage", newMessage);
     }
 
+    /**
+     * Listen for read event from Kafka, and route them to different websocket topics.
+     */
+    @KafkaListener(topics = KafkaConfig.READ_TOPIC)
+    public void readEventListener(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.RECEIVED_KEY) String key) throws JsonProcessingException {
+        log.info("✅ read event from Kafka: " + message);
+        log.info("✅ topic: " + topic);
+        log.info("✅ key: " + key);
+
+        ReadEvent event = new ObjectMapper().readValue(message, ReadEvent.class);
+        String sender = event.sender;
+        String receiver = event.receiver;
+
+        // send message to another user
+        if(!sender.equals(receiver))
+            messagingTemplate.convertAndSendToUser(receiver, "/queue/global.read", event);
+
+        // echo message to yourself
+        messagingTemplate.convertAndSendToUser(sender, "/queue/global.read", event);
+    }
 }
