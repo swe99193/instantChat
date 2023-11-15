@@ -40,22 +40,22 @@ public class Conversation {
     /**
      * user1's last read timestamp
      */
-    @Column(name = "timestamp_user1", nullable=false)
-    public Long timestampUser1;
+    @Column(name = "last_read_user1", nullable=false)
+    public Long lastReadUser1;
 
     /**
      * user2's last read timestamp
      */
-    @Column(name = "timestamp_user2", nullable=false)
-    public Long timestampUser2;
+    @Column(name = "last_read_user2", nullable=false)
+    public Long lastReadUser2;
 
     public Conversation(String user1, String user2) {
         this.user1 = user1;
         this.user2 = user2;
         this.latestMessage = "";
         this.latestTimestamp = 0L;
-        this.timestampUser1 = 0L;
-        this.timestampUser2 = 0L;
+        this.lastReadUser1 = 0L;
+        this.lastReadUser2 = 0L;
     }
 
 }

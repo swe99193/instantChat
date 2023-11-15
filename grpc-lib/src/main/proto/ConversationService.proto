@@ -8,6 +8,7 @@ option java_outer_classname = "ConversationServiceProto";
 service ConversationService {
   rpc findConversationId (FindConversationIdRequest) returns (FindConversationIdResponse) {}
   rpc updateLatestMessage (UpdateLatestMessageRequest) returns (UpdateLatestMessageResponse) {}
+  rpc updateLastRead (UpdateLastReadRequest) returns (UpdateLastReadResponse) {}
 }
 
 message FindConversationIdRequest {
@@ -27,4 +28,13 @@ message UpdateLatestMessageRequest {
 }
 
 message UpdateLatestMessageResponse {
+}
+
+message UpdateLastReadRequest {
+  string sender = 1;
+  string receiver = 2;
+  int64 timestamp = 3;
+}
+
+message UpdateLastReadResponse {
 }

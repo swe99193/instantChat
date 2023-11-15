@@ -20,13 +20,12 @@ import { useSnackbar } from 'notistack';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// TODO: read flag
-
 interface props {
     item: Message;
+    lastRead: number;
 }
 
-function MessageItem({ item }: props) {
+function MessageItem({ item, lastRead }: props) {
     const [open, setOpen] = useState(false);
     const [downloadDisabled, setDownloadDisabled] = useState(false); // avoid duplicate clicks
 
@@ -82,20 +81,31 @@ function MessageItem({ item }: props) {
                 {/* alignItems: make avatar positioned at the bottom */}
 
                 {
-                    // outgoing message  (timestamp)
+                    // outgoing message  (read flag, timestamp)
                     item.direction == "out" &&
-
-                    <Typography
-                        sx={{
-                            fontSize: "11px",
-                            color: "grey",
-                        }}
-                    >
-                        {
-                            // only display hour & minute
-                            new Date(item.timestamp).toLocaleString('zh-Hans-CN').split(" ")[1].slice(0, -3)
-                        }
-                    </Typography>
+                    <Stack>
+                        <Typography
+                            sx={{
+                                fontSize: "10px",
+                                color: "grey",
+                            }}
+                        >
+                            {
+                                lastRead > item.timestamp && "Read "
+                            }
+                        </Typography>
+                        <Typography
+                            sx={{
+                                fontSize: "10px",
+                                color: "grey",
+                            }}
+                        >
+                            {
+                                // only display hour & minute
+                                new Date(item.timestamp).toLocaleString('zh-Hans-CN').split(" ")[1].slice(0, -3)
+                            }
+                        </Typography>
+                    </Stack>
                 }
 
                 {

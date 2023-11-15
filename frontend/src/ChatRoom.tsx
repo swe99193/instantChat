@@ -40,6 +40,7 @@ interface props {
     stompClient: Stomp.Client;
     receiver: string;
     profilePictureUrl: string;
+    lastRead: number;
 }
 
 /**
@@ -76,7 +77,7 @@ function objectNameToFilename(objectName: string) {
     return (objectName).split("/").slice(2).join().split("_").slice(1).join();
 }
 
-function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
+function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props) {
     const [messageInput, setMessageInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);    // from newest to earliest
     const [layoutState, setLayoutState] = useState<LayoutState>("init"); //  controll initial rendering & scroll adjusment
@@ -162,6 +163,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         }, ...messages]);
 
         setLayoutState("receive");
+
+        // publish "read" event
+        const body = {
+            timestamp: new Date().getTime(),
+        }
+        stompClient.send(`/app/event/read/${receiver}`, {}, JSON.stringify(body));
     };
 
 
@@ -408,6 +415,12 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
         setfetchSet(new Set());
         const { receiveSub, echoSub } = subscribeQueue();
 
+        // publish "read" event
+        const body = {
+            timestamp: new Date().getTime(),
+        }
+        stompClient.send(`/app/event/read/${receiver}`, {}, JSON.stringify(body));
+
         return function cleanup() {
             // unsubscribe from queue
             receiveSub.unsubscribe();
@@ -528,7 +541,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl }: props) {
                                 }}
                             >
                                 {
-                                    messages.map((item, index) => <MessageItem item={item} />)
+                                    messages.map((item, index) => <MessageItem item={item} lastRead={lastRead} />)
                                 }
                             </List>
                             {

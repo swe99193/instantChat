@@ -2,6 +2,7 @@ package com.application.chat;
 
 import com.application.config.KafkaConfig;
 import com.application.message_storage.Message;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -10,12 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -40,6 +43,7 @@ public class ChatController {
 	 * Endpoint for sending text message.,
 	 */
 	@MessageMapping("/private-message/{receiver}")
+	@SubscribeMapping
 	public void sendTextMessage(@DestinationVariable String receiver, IncomingMessage incomingMessage, Principal principal) throws Exception {
 
 		if (incomingMessage.content.length() > 10000)
@@ -61,7 +65,6 @@ public class ChatController {
 		String topic = KafkaConfig.MESSAGE_TOPIC;
 		String message = new ObjectMapper().writeValueAsString(outgoingMessage);
 		String key = String.format("%s.%s", sender, receiver);
-		log.info("✅ message before Kafka: ", message);
 		kafkaTemplate.send(topic, key, message);
 	}
 
@@ -108,7 +111,6 @@ public class ChatController {
 		String topic = KafkaConfig.MESSAGE_TOPIC;
 		String message = new ObjectMapper().writeValueAsString(outgoingMessage);
 		String key = String.format("%s.%s", sender, receiver);
-		log.info("✅ message before Kafka: ", message);
 		kafkaTemplate.send(topic, key, message);
 	}
 
@@ -132,6 +134,16 @@ public class ChatController {
 		String sender = principal.getName();
 
 		return chatService.getPresignedUrl(filename, receiver, sender);
+	}
+
+	/**
+	 * Handle read event.
+	 */
+	@MessageMapping("/event/read/{receiver}")
+	public void sendReadEvent(@DestinationVariable String receiver, Map<String, Long> body, Principal principal) throws Exception {
+		String sender = principal.getName();
+
+		chatService.updateConversationRead(sender, receiver, body.get("timestamp"));
 	}
 
 }
