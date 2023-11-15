@@ -111,21 +111,21 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
-        publishLatestMessage(sender, receiver, latestMessage, latestTimestamp);
+        publishNewMessageEvent(sender, receiver, latestMessage, latestTimestamp);
     }
 
     /**
      * Publish "newmessage" event to Kafka.
      */
-    private void publishLatestMessage(String sender, String receiver, String latestMessage, Long latestTimestamp){
+    private void publishNewMessageEvent(String sender, String receiver, String latestMessage, Long latestTimestamp){
         String topic = KafkaConfig.NEW_MESSAGE_TOPIC;
         String key = String.format("%s.%s", sender, receiver);
-        NewMessage newMessage = new NewMessage(latestMessage, latestTimestamp, sender, receiver);
+        NewMessageEvent newMessageEvent = new NewMessageEvent(latestMessage, latestTimestamp, sender, receiver);
 
         String message = "";
 
         try{
-            message = new ObjectMapper().writeValueAsString(newMessage);
+            message = new ObjectMapper().writeValueAsString(newMessageEvent);
             kafkaTemplate.send(topic, key, message);
         } catch(Exception e) {
             e.printStackTrace();

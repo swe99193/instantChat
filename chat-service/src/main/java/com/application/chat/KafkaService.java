@@ -51,21 +51,21 @@ public class KafkaService {
      * Listen for new messages from Kafka, and route them to different websocket topics.
      */
     @KafkaListener(topics = KafkaConfig.NEW_MESSAGE_TOPIC)
-    public void newMessageListener(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.RECEIVED_KEY) String key) throws JsonProcessingException {
+    public void newMessageEventListener(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic, @Header(KafkaHeaders.RECEIVED_KEY) String key) throws JsonProcessingException {
         log.info("✅ new message event from Kafka: " + message);
         log.info("✅ topic: " + topic);
         log.info("✅ key: " + key);
 
-        NewMessage newMessage = new ObjectMapper().readValue(message, NewMessage.class);
-        String sender = newMessage.sender;
-        String receiver = newMessage.receiver;
+        NewMessageEvent newMessageEvent = new ObjectMapper().readValue(message, NewMessageEvent.class);
+        String sender = newMessageEvent.sender;
+        String receiver = newMessageEvent.receiver;
 
         // send message to another user
         if(!sender.equals(receiver))
-            messagingTemplate.convertAndSendToUser(receiver, "/queue/global.newmessage", newMessage);
+            messagingTemplate.convertAndSendToUser(receiver, "/queue/global.newmessage", newMessageEvent);
 
         // echo message to yourself
-        messagingTemplate.convertAndSendToUser(sender, "/queue/global.newmessage", newMessage);
+        messagingTemplate.convertAndSendToUser(sender, "/queue/global.newmessage", newMessageEvent);
     }
 
     /**

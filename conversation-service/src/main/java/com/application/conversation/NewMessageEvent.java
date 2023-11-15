@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class NewMessage {
+public class NewMessageEvent {
 	public String content;
 	public Long timestamp;
 
