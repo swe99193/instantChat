@@ -21,7 +21,7 @@ function ConversationList({ receiver, conversationList, conversationOnClick }: p
         <List>
             {
                 conversationList.map((item, idx) =>
-                    <ListItemButton alignItems="flex-start" selected={receiver == item.username} onClick={conversationOnClick(item.username)} sx={{ borderRadius: "5px", margin: "3px 5px" }}>
+                    <ListItemButton alignItems="flex-start" selected={receiver == item.receiver} onClick={conversationOnClick(item.receiver)} sx={{ borderRadius: "5px", margin: "3px 5px" }}>
                         <ListItemAvatar>
                             {/* TODO: online status */}
                             {/* <Badge variant="dot" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} color="success" invisible={false} sx={{
@@ -42,7 +42,7 @@ function ConversationList({ receiver, conversationList, conversationOnClick }: p
                                     color="text.primary"
                                     noWrap
                                 >
-                                    {item.username}
+                                    {item.receiver}
                                 </Typography>
                             }
 

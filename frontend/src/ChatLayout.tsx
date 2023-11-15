@@ -21,6 +21,7 @@ import { fetchProfilePicture } from './utils/fetchProfilePicture';
 // types
 import { Conversation } from './types/Conversation.types';
 import { NewMessageEvent } from './types/NewMessageEvent.types';
+import { ReadEvent } from './types/ReadEvent.types';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -59,36 +60,38 @@ function ChatLayout() {
         const list: any[] = await res.json();
 
         const arr = list.map(async (item) => {
-            const username = item.user1 == currentUserId ? item.user2 : item.user1;
-            usernameSet.current.add(username);
+            const receiver = item.user1 == currentUserId ? item.user2 : item.user1;
+            usernameSet.current.add(receiver);
 
             // fetch profile picture
-            const objectUrl = await fetchProfilePicture(username);
+            const objectUrl = await fetchProfilePicture(receiver);
 
             return {
-                username: username,
+                receiver: receiver,
                 profilePictureUrl: objectUrl,
                 latestMessage: item.latestMessage,
-                latestTimestamp: item.latestTimestamp
+                latestTimestamp: item.latestTimestamp,
+                lastRead: item.user2 == currentUserId ? item.lastReadUser1 : item.lastReadUser2,
             } as Conversation;
         });
 
         setConversationList(await Promise.all(arr));
     }
 
-    const ConversationOnClick = (username: string) => (event) => {
+    const ConversationOnClick = (receiver: string) => (event) => {
         // wait for stomp connection
         if (!isConnected)
             return;
 
-        setReceiver(username);
-        setProfilePictureUrl(conversationList.filter(item => item.username == username)[0].profilePictureUrl);
+        setReceiver(receiver);
+        setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
     }
 
+    // FIXME: handle new conversation
     const startNewChat = async (event: any) => {
-        const username = event.target.value;
+        const receiver = event.target.value;
 
-        if (event.key != "Enter" || !username)  // not Enter key or empty input
+        if (event.key != "Enter" || !receiver)  // not Enter key or empty input
             return
 
         // wait for stomp connection
@@ -96,14 +99,14 @@ function ChatLayout() {
             return;
 
 
-        if (!/^[a-zA-Z0-9]+$/.test(username)) {  // check alphebet and numeric
+        if (!/^[a-zA-Z0-9]+$/.test(receiver)) {  // check alphebet and numeric
             alert("🔴 Error: invalid username");
             return;
         }
 
         // chech user exists
         const params = new URLSearchParams({
-            username: username
+            username: receiver
         });
 
         const res = await fetch(`${BACKEND_URL}/user/exists?${params}`, { credentials: "include" });
@@ -119,20 +122,21 @@ function ChatLayout() {
             return;
         }
 
-        setReceiver(username);
+        setReceiver(receiver);
 
         // check if user in the list, and update conversation list
-        if (!usernameSet.current.has(username)) {
+        if (!usernameSet.current.has(receiver)) {
 
             // fetch profile picture
-            const objectUrl = await fetchProfilePicture(username);
+            const objectUrl = await fetchProfilePicture(receiver);
 
             // insert new entry
             const newEntry: Conversation = {
-                username: username,
+                receiver: receiver,
                 profilePictureUrl: objectUrl,
                 latestMessage: "",
-                latestTimestamp: new Date().getTime()   // TODO: save this timestamp to db
+                latestTimestamp: new Date().getTime(),   // TODO: save this timestamp to db
+                lastRead: new Date().getTime(),      // TODO: save this timestamp to db
             }
 
             setProfilePictureUrl(objectUrl);
@@ -142,10 +146,10 @@ function ChatLayout() {
             });
 
             // update username set
-            usernameSet.current.add(username);
+            usernameSet.current.add(receiver);
         }
         else {
-            setProfilePictureUrl(conversationList.filter(item => item.username == username)[0].profilePictureUrl);
+            setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
         }
     }
 
@@ -158,8 +162,8 @@ function ChatLayout() {
                 return {
                     ...item,
                     // update the target entry
-                    latestMessage: item.username == message.receiver ? message.content : item.latestMessage,
-                    latestTimestamp: item.username == message.receiver ? message.timestamp : item.latestTimestamp
+                    latestMessage: item.receiver == message.receiver ? message.content : item.latestMessage,
+                    latestTimestamp: item.receiver == message.receiver ? message.timestamp : item.latestTimestamp
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
@@ -169,11 +173,24 @@ function ChatLayout() {
                 return {
                     ...item,
                     // update the target entry
-                    latestMessage: item.username == message.sender ? message.content : item.latestMessage,
-                    latestTimestamp: item.username == message.sender ? message.timestamp : item.latestTimestamp
+                    latestMessage: item.receiver == message.sender ? message.content : item.latestMessage,
+                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
+    }
+
+    const handleReadEvent = async (event: ReadEvent) => {
+        // affect rendering of read flag in chatroom
+        setConversationList(list => list.map((item, index) => {
+            return {
+                ...item,
+                // update the target entry
+                // note: If read event's timestamp larger, override. Else, no change 
+                lastRead: item.receiver == event.sender && item.lastRead < event.timestamp ? event.timestamp : item.lastRead
+            }
+        }));
+
     }
 
 
@@ -181,6 +198,7 @@ function ChatLayout() {
         fetchConversation();
 
         var newMessageSub: Stomp.Subscription;
+        var readSub: Stomp.Subscription;
 
         stompClient.current.connect({}, function (frame) {
             console.log('Connected: ' + frame);
@@ -190,11 +208,16 @@ function ChatLayout() {
                 handleNewMessageEvent(JSON.parse(message.body));
             });
 
+            readSub = stompClient.current.subscribe(`/user/queue/global.read`, function (message) {
+                handleReadEvent(JSON.parse(message.body));
+            });
+
         });
 
         return function cleanup() {
             // unsubscribe from queue
             newMessageSub.unsubscribe();
+            readSub.unsubscribe();
         }
     }, []);
 
@@ -242,7 +265,7 @@ function ChatLayout() {
             </Box>
 
             {/* chat contrainer */}
-            {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} profilePictureUrl={profilePictureUrl} /> : <></>}
+            {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} profilePictureUrl={profilePictureUrl} lastRead={conversationList.find(item => item.receiver == receiver).lastRead} /> : <></>}
         </div>
     );
 }
