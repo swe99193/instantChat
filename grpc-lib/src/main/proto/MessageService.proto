@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "MessageServiceGrpcLib";
+option java_outer_classname = "MessageServiceProto";
+
+// Note: service name will be the prefix of the gRPC Bean
+service MessageService {
+  rpc saveMessage (SaveMessageRequest) returns (SaveMessageResponse) {}
+}
+
+message SaveMessageRequest {
+  string conversationId = 1;
+  int64 timestamp = 2;
+  string sender = 3;
+  string receiver = 4;
+  string contentType = 5;
+  string content = 6;
+  int64 fileSize = 7;
+}
+
+message SaveMessageResponse {
+}
