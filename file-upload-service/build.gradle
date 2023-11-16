@@ -1,0 +1,40 @@
+plugins {
+	id 'org.springframework.boot' version '3.0.0'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.0.0'
+	implementation 'org.springframework.session:spring-session-data-redis:3.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter-web:3.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter-security:3.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux:3.0.0'
+
+	// Kafka
+	implementation("org.springframework.kafka:spring-kafka:3.0.11")
+
+	compileOnly 'org.projectlombok:lombok:1.18.24'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// S3
+	implementation 'software.amazon.awssdk:s3:2.20.135'
+
+	// gRPC
+	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
+	implementation project(':grpc-lib')
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+	useJUnitPlatform()
+}
