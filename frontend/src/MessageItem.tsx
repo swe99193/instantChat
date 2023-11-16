@@ -19,6 +19,7 @@ import { useSnackbar } from 'notistack';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// const BACKEND_URL = "http://localhost:8082";  // for local testing
 
 interface props {
     item: Message;
@@ -41,7 +42,7 @@ function MessageItem({ item, lastRead }: props) {
         });
 
         // download file
-        let res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include" });
+        let res = await fetch(`${BACKEND_URL}/message/file/url?${params}`, { credentials: "include" });
         const s3objectUrl: String = await res.text();
 
         res = await fetch(`${s3objectUrl}`);
