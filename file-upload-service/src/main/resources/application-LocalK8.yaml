@@ -1,0 +1,63 @@
+# application configuration for local k8 minikube
+
+spring:
+    # ref: https://docs.spring.io/spring-session/reference/guides/boot-redis.html
+    session:
+        store:
+            type: redis
+
+        redis:
+            namespace: spring:session
+    data:
+        redis:
+            host: ${REDIS_URL}
+            port: 6379
+
+    servlet:
+        # set multipart size limit
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
+
+server:
+    port: 8080
+
+    servlet:
+        session:
+            timeout: 360000  # session timeout, 100 hrs
+
+amazon:
+    aws:
+        accesskey: ${AWS_ACCESS_KEY}
+        secretkey: ${AWS_SECRET_KEY}
+
+    s3:
+        bucketname: ${S3_BUCKET_NAME}
+
+#rabbitmq:   # AWS (switch to ActiveMQ)
+#    host: ${MQ_HOST}
+#    port: ${MQ_PORT}
+#    username: ${MQ_USERNAME}
+#    password: ${MQ_PASSWORD}
+
+frontend:
+    url: ${FRONTEND_URL}
+
+grpc:
+    server:
+        port: 9090
+
+    client:
+        # microservices
+        # find gRPC server by dns
+        # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
+        grpc-server-conversation: # gRPC server name
+            address: 'dns:///conversation-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+        grpc-server-message: # gRPC server name
+            address: 'dns:///conversation-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext

@@ -22,7 +22,9 @@ import { imageExtension } from './shared/supportedFileExtension';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-// const BACKEND_URL_1 = "http://localhost:8084";  // for local testing
+// const BACKEND_URL = "http://localhost:8082";    // for local testing
+// const BACKEND_URL_3 = "http://localhost:8083";    // for local testing
+// const BACKEND_URL_4 = "http://localhost:8084";  // for local testing
 const pageSize = 20;
 
 /**
@@ -101,18 +103,31 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
     const fetchAbortController = new AbortController(); // abort fetch request
 
 
-    const handleSendClick = (message: string) => (event) => {
+    const handleSendClick = (message: string) => async (event) => {
         if (message.length > 10000) {
             alert("🔴 Text size too large");
             return;
         }
 
-        stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: message }));
-
         setMessageInput(""); // set input to empty
+
+        // send text by POST 
+        const params = new URLSearchParams({
+            receiver: receiver,
+        });
+
+        const res = await fetch(`${BACKEND_URL}/message/private-message/text?${params}`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({ contentType: "text", content: message }),
+        });
+
     };
 
-    const onEnter = (event) => {
+    const onEnter = async (event) => {
         // check composition event
         if (lockInput)
             return;
@@ -124,9 +139,20 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
                 return;
             }
 
-            stompClient.send(`/app/private-message/${receiver}`, {}, JSON.stringify({ contentType: "text", content: messageInput }));
-
             setMessageInput(""); // set input to empty
+
+            // send text by POST 
+            const params = new URLSearchParams({
+                receiver: receiver,
+            });
+            const res = await fetch(`${BACKEND_URL}/message/private-message/text?${params}`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                },
+                body: JSON.stringify({ contentType: "text", content: messageInput }),
+            });
         }
     };
 
@@ -202,7 +228,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         });
 
         try {
-            var response = await fetch(`${BACKEND_URL}/chat/message?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+            var response = await fetch(`${BACKEND_URL}/message?${params}`, { credentials: "include", signal: fetchAbortController.signal });
         } catch (error) {
             return;
         }
@@ -271,7 +297,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
                 });
 
                 try {
-                    var res = await fetch(`${BACKEND_URL}/chat/message/file/url?${params}`, { credentials: "include", signal: fetchAbortController.signal });
+                    var res = await fetch(`${BACKEND_URL}/message/file/url?${params}`, { credentials: "include", signal: fetchAbortController.signal });
                 } catch (error) {
                     return;
                 }
@@ -383,7 +409,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
             receiver: receiver,
         });
 
-        const res = await fetch(`${BACKEND_URL}/chat/private-message/file?${params}`, {
+        const res = await fetch(`${BACKEND_URL}/filestorage/private-message/file?${params}`, {
             method: "POST",
             credentials: "include",
             body: data,

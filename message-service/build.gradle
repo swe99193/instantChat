@@ -13,7 +13,6 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-websocket:3.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.0.0'
 	implementation 'org.springframework.session:spring-session-data-redis:3.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.0.0'
@@ -25,6 +24,12 @@ dependencies {
 
 	compileOnly 'org.projectlombok:lombok:1.18.24'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// DynamoDB
+	implementation 'software.amazon.awssdk:dynamodb:2.20.147'
+
+	// S3
+	implementation 'software.amazon.awssdk:s3:2.20.135'
 
 	// gRPC
 	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'

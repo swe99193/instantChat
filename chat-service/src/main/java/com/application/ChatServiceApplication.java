@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @Slf4j
 @SpringBootApplication
-public class ChatApplication {
+public class ChatServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ChatApplication.class, args);
+		SpringApplication.run(ChatServiceApplication.class, args);
 		log.info("✅ Application successfully launched 🚀🚀");
 	}
 }

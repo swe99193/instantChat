@@ -25,8 +25,8 @@ import { ReadEvent } from './types/ReadEvent.types';
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-// const BACKEND_URL_1 = "http://localhost:8082";  // for local testing
-// const BACKEND_URL_2 = "http://localhost:8084";  // for local testing
+// const BACKEND_URL = "http://localhost:8081";  // for local testing
+// const BACKEND_URL_4 = "http://localhost:8084";  // for local testing
 const WEBSOCKET_ENDPOINT = process.env.REACT_APP_WEBSOCKET_ENDPOINT;
 
 
