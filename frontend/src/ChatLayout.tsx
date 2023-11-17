@@ -262,7 +262,6 @@ function ChatLayout() {
             <Box sx={{
                 minWidth: "300px",
                 maxWidth: "300px",
-                overflow: "auto",
                 borderRight: "1px solid lightgrey",
             }}>
 
@@ -290,8 +289,12 @@ function ChatLayout() {
                         }}
                     />
                 </div>
-
-                <ConversationList receiver={receiver} conversationList={conversationList} conversationOnClick={ConversationOnClick} />
+                <Box sx={{
+                    overflow: "auto",
+                    height: "100%"
+                }}>
+                    <ConversationList receiver={receiver} conversationList={conversationList} conversationOnClick={ConversationOnClick} />
+                </Box>
             </Box>
 
             {/* chat contrainer */}
