@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/conversation")
@@ -22,7 +23,7 @@ public class ConversationController {
      * return a list of conversation user for a user
      */
     @GetMapping
-    public List<Conversation> listConversation(Principal principal){
+    public List<Map<String, Object>> listConversation(Principal principal){
         return conversationService.listConversation(principal.getName());
     }
 }

@@ -1,21 +1,28 @@
 package com.application.conversation;
 
 import ConversationServiceLib.*;
+import MessageServiceGrpcLib.*;
 import com.application.config.KafkaConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Slf4j
 @GrpcService // also include @Service
 public class ConversationService extends ConversationServiceGrpc.ConversationServiceImplBase {
+    @GrpcClient("grpc-server-message")
+    private MessageServiceGrpc.MessageServiceBlockingStub messageService;
 
     private final ConversationRepository conversationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -29,8 +36,36 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
     /**
      * Get conversation list.
      */
-    public List<Conversation> listConversation(String username) {
-        return conversationRepository.findByUser1OrUser2OrderByLatestTimestampDesc(username, username);
+    public List<Map<String, Object>> listConversation(String username) {
+        List<Conversation> result = conversationRepository.findByUser1OrUser2OrderByLatestTimestampDesc(username, username);
+        List<Map<String, Object>> conversationList = new ArrayList<>();
+        List<GetUnreadCountQuery> queryList = new ArrayList<>();
+
+        // gRPC, fetch unread counts
+        for (Conversation conversation : result) {
+            GetUnreadCountQuery query = GetUnreadCountQuery.newBuilder().setConversationId(conversation.id.toString()).setTimestamp(username.equals(conversation.user1) ? conversation.lastReadUser1 : conversation.lastReadUser2).build();
+
+            queryList.add(query);
+        }
+
+        GetUnreadCountRequest request = GetUnreadCountRequest.newBuilder().setUsername(username).addAllQuery(queryList).build();
+        GetUnreadCountResponse response = messageService.getUnreadCount(request);
+
+        int index = 0;
+        for (Conversation conversation : result) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("id", conversation.id);
+            body.put("user1", conversation.user1);
+            body.put("user2", conversation.user2);
+            body.put("latestMessage", conversation.latestMessage);
+            body.put("lastReadUser1", conversation.lastReadUser1);
+            body.put("lastReadUser2", conversation.lastReadUser2);
+            body.put("unreadCount", response.getUnreadCount(index++));
+
+            conversationList.add(body);
+        }
+
+        return conversationList;
     }
 
 
