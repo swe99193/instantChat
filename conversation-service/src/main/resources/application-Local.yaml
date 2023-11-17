@@ -26,6 +26,9 @@ spring:
 server:
     port: 8081
 
+    error:
+        include-message: always
+
 frontend:
     url: http://localhost:3000
 
@@ -39,3 +42,10 @@ grpc:
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext
+
+        grpc-server-account: # gRPC server name
+            address: 'static://127.0.0.1:9094'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+

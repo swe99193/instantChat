@@ -24,6 +24,9 @@ spring:
 server:
     port: 8080
 
+    error:
+        include-message: always
+
 frontend:
     url: ${FRONTEND_URL}
 
@@ -35,6 +38,12 @@ grpc:
         # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
         grpc-server-message: # gRPC server name
             address: 'dns:///conversation-service:9090'
+            enableKeepAlive: true
+            keepAliveWithoutCalls: true
+            negotiationType: plaintext
+
+        grpc-server-account: # gRPC server name
+            address: 'dns:///account-service:9090'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext
