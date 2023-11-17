@@ -10,9 +10,8 @@ import { useAppSelector } from "./redux/hooks";
 // notification stack
 import { useSnackbar } from 'notistack';
 
-// components
-import { fetchProfilePicture } from "./utils/fetchProfilePicture";
-import { imageExtension } from "./shared/supportedFileExtension";
+// misc
+import { profileExtension } from "./shared/supportedFileExtension";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 // const BACKEND_URL = "http://localhost:8084";  // for local testing
@@ -84,7 +83,7 @@ function ProfileSettings({ profilePictureUrl }) {
 
         const fileType = file.name.split(".").pop();
 
-        if (!imageExtension.includes(fileType)) {
+        if (!profileExtension.includes(fileType)) {
             alert("🔴 Only jpeg, jpg, png are supported");
             return;
         }
