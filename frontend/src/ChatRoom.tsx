@@ -172,6 +172,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         }, ...messages]);
 
         setLayoutState("send");
+        stompClient.send(`/app/event/read/${receiver}`, {});
     };
 
 
@@ -191,10 +192,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         setLayoutState("receive");
 
         // publish "read" event
-        const body = {
-            timestamp: new Date().getTime(),
-        }
-        stompClient.send(`/app/event/read/${receiver}`, {}, JSON.stringify(body));
+        stompClient.send(`/app/event/read/${receiver}`, {});
     };
 
 
@@ -372,7 +370,6 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
 
 
     const subscribeQueue = () => {
-        // TODO: push "READ" to MQ
 
         const receiveSub = stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
             handleReceive(JSON.parse(message.body));
@@ -442,10 +439,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         const { receiveSub, echoSub } = subscribeQueue();
 
         // publish "read" event
-        const body = {
-            timestamp: new Date().getTime(),
-        }
-        stompClient.send(`/app/event/read/${receiver}`, {}, JSON.stringify(body));
+        stompClient.send(`/app/event/read/${receiver}`, {});
 
         return function cleanup() {
             // unsubscribe from queue
