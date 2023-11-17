@@ -16,7 +16,7 @@ import java.util.Map;
 public class UserDataController {
     private final UserDataService userDataService;
 
-    private final static List<String> IMAGE_EXTENSION = List.of("jpeg", "jpg", "gif", "png");
+    private final static List<String> IMAGE_EXTENSION = List.of("jpeg", "jpg", "png");
 
     @Autowired
     public UserDataController(UserDataService userDataService) {
@@ -30,9 +30,9 @@ public class UserDataController {
     }
 
     @GetMapping("/profile-picture")
-    public byte[] getProfilePicture(@RequestParam String username) throws ResponseStatusException {
+    public String getProfilePictureUrl(@RequestParam String username) throws ResponseStatusException {
 
-        return userDataService.getProfilePicture(username);
+        return userDataService.getProfilePictureUrl(username);
     }
 
     @PutMapping("/profile-picture")
@@ -40,11 +40,11 @@ public class UserDataController {
         List<String> filename = List.of(file.getOriginalFilename().split("\\."));
 
         if(filename.size() == 1 || !IMAGE_EXTENSION.contains(filename.get(filename.size() - 1)))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile picture supported extension: jpeg, jpg, gif, png");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile picture supported extension: jpeg, jpg, png");
 
 
-        if(file.getSize() > 20000.0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile picture size larger than 20KB not supported");
+        if(file.getSize() > 10000.0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Profile picture size larger than 10KB not supported");
 
 
         userDataService.updateProfilePicture(principal.getName(), file);
