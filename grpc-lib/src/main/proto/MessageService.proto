@@ -7,6 +7,7 @@ option java_outer_classname = "MessageServiceProto";
 // Note: service name will be the prefix of the gRPC Bean
 service MessageService {
   rpc saveMessage (SaveMessageRequest) returns (SaveMessageResponse) {}
+  rpc getUnreadCount (GetUnreadCountRequest) returns (GetUnreadCountResponse) {}
 }
 
 message SaveMessageRequest {
@@ -21,3 +22,19 @@ message SaveMessageRequest {
 
 message SaveMessageResponse {
 }
+
+
+message GetUnreadCountQuery {
+  string conversationId = 1;
+  int64 timestamp = 2;
+}
+
+message GetUnreadCountRequest {
+  string username = 1;
+  repeated GetUnreadCountQuery query = 2;
+}
+
+message GetUnreadCountResponse {
+  repeated int32 unreadCount = 1;
+}
+
