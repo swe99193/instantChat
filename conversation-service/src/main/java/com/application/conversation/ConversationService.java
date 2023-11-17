@@ -1,5 +1,8 @@
 package com.application.conversation;
 
+import AccountServiceGrpcLib.AccountServiceGrpc;
+import AccountServiceGrpcLib.CheckUserExistRequest;
+import AccountServiceGrpcLib.CheckUserExistResponse;
 import ConversationServiceLib.*;
 import MessageServiceGrpcLib.*;
 import com.application.config.KafkaConfig;
@@ -9,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +28,9 @@ import java.util.Map;
 public class ConversationService extends ConversationServiceGrpc.ConversationServiceImplBase {
     @GrpcClient("grpc-server-message")
     private MessageServiceGrpc.MessageServiceBlockingStub messageService;
+
+    @GrpcClient("grpc-server-account")
+    private AccountServiceGrpc.AccountServiceBlockingStub accountService;
 
     private final ConversationRepository conversationRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -72,8 +80,6 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
 
     /**
      * Get conversation id given two users.
-     * <p>
-     * If conversation id not found, create a new one, and create a new conversation record.
     */
     private String findConversationId(String user1, String user2){
         // swap to ensure user1 < user2
@@ -83,16 +89,7 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
             user2 = tmp;
         }
 
-        String conversationId = conversationRepository.findConversationIdByUsers(user1, user2);
-
-        if (conversationId == null){
-            // create a new conversation
-            Conversation conversation = new Conversation(user1, user2);
-            conversation = conversationRepository.save(conversation);
-            conversationId = conversation.id.toString();
-        }
-
-        return conversationId;
+        return conversationRepository.findConversationIdByUsers(user1, user2);
     }
 
 
@@ -228,4 +225,33 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
 
     }
 
+    /**
+     * Create a new conversation.
+     */
+    @Transactional
+    public Conversation createConversation(String sender, String receiver){
+        // check receiver exists
+        CheckUserExistRequest request = CheckUserExistRequest.newBuilder().setUsername(receiver).build();
+        CheckUserExistResponse response = accountService.checkUserExist(request);
+
+        if(!response.getExist())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username does not exists");
+
+        // check conversation exists
+        if(findConversationId(sender, receiver) != null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "conversation already exists");
+
+        String user1 = sender;
+        String user2 = receiver;
+
+        // swap to ensure user1 < user2
+        if (user1.compareTo(user2) > 0){
+            String tmp = user1;
+            user1 = user2;
+            user2 = tmp;
+        }
+
+        Conversation conversation = new Conversation(user1, user2);
+        return conversationRepository.save(conversation);
+    }
 }

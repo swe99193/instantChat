@@ -1,9 +1,7 @@
 package com.application.conversation;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -25,6 +23,11 @@ public class ConversationController {
     @GetMapping
     public List<Map<String, Object>> listConversation(Principal principal){
         return conversationService.listConversation(principal.getName());
+    }
+
+    @PostMapping
+    public Conversation createConversation(@RequestParam String receiver, Principal principal){
+        return conversationService.createConversation(principal.getName(), receiver);
     }
 }
 
