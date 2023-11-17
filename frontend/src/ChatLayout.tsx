@@ -39,6 +39,7 @@ function ChatLayout() {
 
     const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
+    const [searchDisable, setSearchDisable] = useState(true); // disable search until conversation list is rendered
 
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
@@ -77,6 +78,7 @@ function ChatLayout() {
         });
 
         setConversationList(await Promise.all(arr));
+        setSearchDisable(false);
     }
 
     const ConversationOnClick = (receiver: string) => (event) => {
@@ -88,7 +90,7 @@ function ChatLayout() {
         setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
     }
 
-    // FIXME: handle new conversation
+
     const startNewChat = async (event: any) => {
         const receiver = event.target.value;
 
@@ -104,55 +106,58 @@ function ChatLayout() {
             alert("🔴 Error: invalid username");
             return;
         }
+        // check if user in the list
+        if (usernameSet.current.has(receiver)) {
+            setReceiver(receiver);
+            setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
+            return;
+        }
 
-        // chech user exists
         const params = new URLSearchParams({
-            username: receiver
+            receiver: receiver
         });
 
-        const res = await fetch(`${BACKEND_URL}/user/exists?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/conversation?${params}`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({}),
+        });
 
         const resJson = await res.json();
 
-        if (res.status != 200) {
+        if (res.status == 400) {
+            alert(`🔴 Error: ${resJson.message}`);
+            return;
+        } else if (res.status != 200) {
             alert("🔴 Server error");
             return;
         }
-        else if (resJson == false) {
-            alert("🔴 Error: user does not exist");
-            return;
+
+        const objectUrl = await fetchProfilePicture(receiver);
+
+        // insert new entry
+        const newEntry: Conversation = {
+            receiver: receiver,
+            profilePictureUrl: objectUrl,
+            latestMessage: resJson.latestMessage,
+            latestTimestamp: resJson.latestTimestamp,
+            lastRead: resJson.user2 == currentUserId ? resJson.lastReadUser1 : resJson.lastReadUser2,
+            unreadCount: 0,
         }
 
+        setConversationList(conversations => {
+            return [newEntry].concat(conversations);
+        });
+
+        // update username set
+        usernameSet.current.add(receiver);
+
+        // enter conversation
         setReceiver(receiver);
-
-        // check if user in the list, and update conversation list
-        if (!usernameSet.current.has(receiver)) {
-
-            // fetch profile picture
-            const objectUrl = await fetchProfilePicture(receiver);
-
-            // insert new entry
-            const newEntry: Conversation = {
-                receiver: receiver,
-                profilePictureUrl: objectUrl,
-                latestMessage: "",
-                latestTimestamp: new Date().getTime(),   // TODO: save this timestamp to db
-                lastRead: new Date().getTime(),      // TODO: save this timestamp to db
-                unreadCount: 0,
-            }
-
-            setProfilePictureUrl(objectUrl);
-
-            setConversationList(conversations => {
-                return [newEntry].concat(conversations);
-            });
-
-            // update username set
-            usernameSet.current.add(receiver);
-        }
-        else {
-            setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
-        }
+        setProfilePictureUrl(objectUrl);
     }
 
     const handleNewMessageEvent = async (message: NewMessageEvent) => {
@@ -275,6 +280,7 @@ function ChatLayout() {
                         autoFocus={false}
                         label=""
                         placeholder="Search username"
+                        disabled={searchDisable}
                         onKeyDown={startNewChat}
                         autoComplete="off"
                         sx={{ "margin": "10px", borderColor: "red" }}
