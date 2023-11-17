@@ -72,6 +72,7 @@ function ChatLayout() {
                 latestMessage: item.latestMessage,
                 latestTimestamp: item.latestTimestamp,
                 lastRead: item.user2 == currentUserId ? item.lastReadUser1 : item.lastReadUser2,
+                unreadCount: item.unreadCount,
             } as Conversation;
         });
 
@@ -137,6 +138,7 @@ function ChatLayout() {
                 latestMessage: "",
                 latestTimestamp: new Date().getTime(),   // TODO: save this timestamp to db
                 lastRead: new Date().getTime(),      // TODO: save this timestamp to db
+                unreadCount: 0,
             }
 
             setProfilePictureUrl(objectUrl);
@@ -154,8 +156,16 @@ function ChatLayout() {
     }
 
     const handleNewMessageEvent = async (message: NewMessageEvent) => {
-        // update latest message & timestamp
+        // update latest message & timestamp & unread count
         // update new conversation order
+        var receiver;
+
+        // hack: get new values
+        setReceiver(_receiver => {
+            receiver = _receiver;
+            return _receiver;
+        })
+
         if (message.sender == currentUserId) {
             // echo new message
             setConversationList(list => list.map((item, index) => {
@@ -163,7 +173,8 @@ function ChatLayout() {
                     ...item,
                     // update the target entry
                     latestMessage: item.receiver == message.receiver ? message.content : item.latestMessage,
-                    latestTimestamp: item.receiver == message.receiver ? message.timestamp : item.latestTimestamp
+                    latestTimestamp: item.receiver == message.receiver ? message.timestamp : item.latestTimestamp,
+                    unreadCount: item.unreadCount   // NO change
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
@@ -174,7 +185,10 @@ function ChatLayout() {
                     ...item,
                     // update the target entry
                     latestMessage: item.receiver == message.sender ? message.content : item.latestMessage,
-                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp
+                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp,
+                    // if active conversation, unreadCount <= 0
+                    // else, unreadCount++
+                    unreadCount: item.receiver == message.sender ? (message.sender == receiver ? 0 : item.unreadCount + 1) : item.unreadCount,
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
@@ -182,14 +196,30 @@ function ChatLayout() {
 
     const handleReadEvent = async (event: ReadEvent) => {
         // affect rendering of read flag in chatroom
-        setConversationList(list => list.map((item, index) => {
-            return {
-                ...item,
-                // update the target entry
-                // note: If read event's timestamp larger, override. Else, no change 
-                lastRead: item.receiver == event.sender && item.lastRead < event.timestamp ? event.timestamp : item.lastRead
-            }
-        }));
+
+        if (event.sender == currentUserId) {
+            // echo read event
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    // note: unreadCount = 0
+                    lastRead: item.lastRead,
+                    unreadCount: item.receiver == event.receiver ? 0 : item.unreadCount
+                }
+            }));
+        } else {
+            // others read event
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    // note: If read event's timestamp larger, override. Else, no change 
+                    lastRead: item.receiver == event.sender && item.lastRead < event.timestamp ? event.timestamp : item.lastRead,
+                    unreadCount: item.unreadCount
+                }
+            }));
+        }
 
     }
 
