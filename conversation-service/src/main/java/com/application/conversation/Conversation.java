@@ -53,7 +53,7 @@ public class Conversation {
         this.user1 = user1;
         this.user2 = user2;
         this.latestMessage = "";
-        this.latestTimestamp = 0L;
+        this.latestTimestamp = System.currentTimeMillis();
         this.lastReadUser1 = 0L;
         this.lastReadUser2 = 0L;
     }

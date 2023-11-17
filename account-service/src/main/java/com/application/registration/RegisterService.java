@@ -18,8 +18,6 @@ public class RegisterService {
     private final UserDataRepository userDataRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final List<String> defaultProfilePicture = List.of(
-            "dove-trash-dove.gif",
-            "pigeon.gif",
             "reddit_avatar_blue.jpg",
             "reddit_avatar_brown.png",
             "reddit_avatar_green.png",

@@ -38,3 +38,7 @@ amazon:
 
 frontend:
     url: http://localhost:3000
+
+grpc:
+    server:
+        port: 9094

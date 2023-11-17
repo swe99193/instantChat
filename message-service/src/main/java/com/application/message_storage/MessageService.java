@@ -17,7 +17,6 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -183,6 +182,34 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
     }
 
     /**
+     * Get unread count for a user.
+     * Query DynamoDB based on the partition key "conversation_id" and sort key "timestamp".
+     */
+    private Integer getUnreadCount(String conversationId, Long timestamp, String username){
+        // Set up an alias for the partition key name in case it's a reserved word.
+        HashMap<String,String> attrNameAlias = new HashMap<String,String>();
+        attrNameAlias.put("#T", "timestamp");
+
+
+        HashMap<String, AttributeValue> attrValues = new HashMap<>();
+        attrValues.put(":conversation_id", AttributeValue.builder().s(conversationId).build());
+        attrValues.put(":timestamp", AttributeValue.builder().n(timestamp.toString()).build());
+        attrValues.put(":username", AttributeValue.builder().s(username).build());
+
+        QueryRequest request = QueryRequest.builder()
+                .tableName(tableName)
+                .keyConditionExpression("conversation_id = :conversation_id AND #T > :timestamp")
+                .filterExpression("receiver = :username")
+                .expressionAttributeNames(attrNameAlias)
+                .expressionAttributeValues(attrValues)
+                .select(Select.COUNT)
+                .build();
+
+        QueryResponse response = client.query(request);
+        return response.count();
+    }
+
+    /**
      * Get temporary file download url.
      */
     public String getPresignedUrl(String objectName, String receiver, String sender) {
@@ -226,5 +253,23 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
         // gRPC
         UpdateLatestMessageRequest request = UpdateLatestMessageRequest.newBuilder().setSender(sender).setReceiver(receiver).setLatestMessage(latestMessage).setLatestTimestamp(latestTimestamp).build();
         UpdateLatestMessageResponse response = conversationService.updateLatestMessage(request);
+    }
+
+    @Override
+    public void getUnreadCount(GetUnreadCountRequest request, StreamObserver<GetUnreadCountResponse> responseObserver) {
+        log.info("🟢 gRPC message service getUnreadCount");
+
+        String username = request.getUsername();
+        List<GetUnreadCountQuery> queryList = request.getQueryList();
+        List<Integer> unreadCountList = new ArrayList<>();
+
+        for (GetUnreadCountQuery query : queryList) {
+            Integer count = getUnreadCount(query.getConversationId(), query.getTimestamp(), username);
+            unreadCountList.add(count);
+        }
+
+        GetUnreadCountResponse response = GetUnreadCountResponse.newBuilder().addAllUnreadCount(unreadCountList).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }

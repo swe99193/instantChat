@@ -4,4 +4,5 @@ export interface Conversation {
     latestMessage: string;
     latestTimestamp: number;
     lastRead: number;
+    unreadCount: number;
 }

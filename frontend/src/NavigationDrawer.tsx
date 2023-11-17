@@ -106,7 +106,7 @@ function NavigationDrawer({ open, setOpen }) {
             </Dialog>
 
             <Dialog maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: "10px" } }} open={openProfile} onClose={() => setOpenProfile(false)}>
-                <ProfileSettings />
+                <ProfileSettings profilePictureUrl={profilePictureUrl} />
             </Dialog>
         </>
     );

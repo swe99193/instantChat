@@ -29,10 +29,10 @@ public class ChatController {
 	 * Handle read event.
 	 */
 	@MessageMapping("/event/read/{receiver}")
-	public void sendReadEvent(@DestinationVariable String receiver, Map<String, Long> body, Principal principal) throws Exception {
+	public void sendReadEvent(@DestinationVariable String receiver, Principal principal) throws Exception {
 		String sender = principal.getName();
 
-		chatService.updateConversationRead(sender, receiver, body.get("timestamp"));
+		chatService.updateConversationRead(sender, receiver, System.currentTimeMillis());
 	}
 
 }

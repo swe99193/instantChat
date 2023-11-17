@@ -1,5 +1,5 @@
 // mui
-import { Avatar, List, ListItemAvatar, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Avatar, Badge, List, ListItemAvatar, ListItemButton, ListItemText, Typography } from "@mui/material";
 
 // types
 import { Conversation } from "./types/Conversation.types";
@@ -56,9 +56,8 @@ function ConversationList({ receiver, conversationList, conversationOnClick }: p
                                 </Typography>
                             }
                         />
-                        {/* TODO: unread message counts */}
                         {/* adjust Badge position: https://stackoverflow.com/questions/71399377/how-to-position-mui-badge-in-iconbutton-border-in-reactjs */}
-                        {/* <Badge badgeContent={4} color="error" invisible={false} style={{ transform: 'translate(0px, 25px)' }}></Badge> */}
+                        <Badge badgeContent={item.unreadCount} color="error" invisible={false} style={{ transform: 'translate(0px, 25px)' }}></Badge>
                     </ListItemButton>
                 )
             }

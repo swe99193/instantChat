@@ -10,19 +10,16 @@ import { useAppSelector } from "./redux/hooks";
 // notification stack
 import { useSnackbar } from 'notistack';
 
-// components
-import { fetchProfilePicture } from "./utils/fetchProfilePicture";
-import { imageExtension } from "./shared/supportedFileExtension";
+// misc
+import { profileExtension } from "./shared/supportedFileExtension";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 // const BACKEND_URL = "http://localhost:8084";  // for local testing
 
 
-function ProfileSettings() {
+function ProfileSettings({ profilePictureUrl }) {
     const navigate = useNavigate();
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
-
-    const [profilePictureUrl, setProfilePictureUrl] = useState(""); // object url
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -86,15 +83,15 @@ function ProfileSettings() {
 
         const fileType = file.name.split(".").pop();
 
-        if (!imageExtension.includes(fileType)) {
-            alert("🔴 Only jpeg, jpg, gif, png are supported");
+        if (!profileExtension.includes(fileType)) {
+            alert("🔴 Only jpeg, jpg, png are supported");
             return;
         }
 
         event.target.value = null;  // reset file input
 
-        if (file.size > 20000) {
-            alert("🔴 File size larger than 20KB not supported");
+        if (file.size > 10000) {
+            alert("🔴 File size larger than 10KB not supported");
             return;
         }
 
@@ -120,17 +117,6 @@ function ProfileSettings() {
         enqueueSnackbar("Upload success", { variant: "success", autoHideDuration: 3000 });
         navigate(0); // refresh
     }
-
-
-    const init = async () => {
-        // fetch profile picture
-        const objectUrl = await fetchProfilePicture(currentUserId);
-        setProfilePictureUrl(objectUrl);
-    }
-
-    useEffect(() => {
-        init();
-    }, []);
 
 
     return (

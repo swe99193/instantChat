@@ -39,6 +39,7 @@ function ChatLayout() {
 
     const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
+    const [searchDisable, setSearchDisable] = useState(true); // disable search until conversation list is rendered
 
     const currentUserId = useAppSelector(state => state.login.userId); // Redux
 
@@ -72,10 +73,12 @@ function ChatLayout() {
                 latestMessage: item.latestMessage,
                 latestTimestamp: item.latestTimestamp,
                 lastRead: item.user2 == currentUserId ? item.lastReadUser1 : item.lastReadUser2,
+                unreadCount: item.unreadCount,
             } as Conversation;
         });
 
         setConversationList(await Promise.all(arr));
+        setSearchDisable(false);
     }
 
     const ConversationOnClick = (receiver: string) => (event) => {
@@ -87,7 +90,7 @@ function ChatLayout() {
         setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
     }
 
-    // FIXME: handle new conversation
+
     const startNewChat = async (event: any) => {
         const receiver = event.target.value;
 
@@ -103,59 +106,71 @@ function ChatLayout() {
             alert("🔴 Error: invalid username");
             return;
         }
+        // check if user in the list
+        if (usernameSet.current.has(receiver)) {
+            setReceiver(receiver);
+            setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
+            return;
+        }
 
-        // chech user exists
         const params = new URLSearchParams({
-            username: receiver
+            receiver: receiver
         });
 
-        const res = await fetch(`${BACKEND_URL}/user/exists?${params}`, { credentials: "include" });
+        const res = await fetch(`${BACKEND_URL}/conversation?${params}`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({}),
+        });
 
         const resJson = await res.json();
 
-        if (res.status != 200) {
+        if (res.status == 400) {
+            alert(`🔴 Error: ${resJson.message}`);
+            return;
+        } else if (res.status != 200) {
             alert("🔴 Server error");
             return;
         }
-        else if (resJson == false) {
-            alert("🔴 Error: user does not exist");
-            return;
+
+        const objectUrl = await fetchProfilePicture(receiver);
+
+        // insert new entry
+        const newEntry: Conversation = {
+            receiver: receiver,
+            profilePictureUrl: objectUrl,
+            latestMessage: resJson.latestMessage,
+            latestTimestamp: resJson.latestTimestamp,
+            lastRead: resJson.user2 == currentUserId ? resJson.lastReadUser1 : resJson.lastReadUser2,
+            unreadCount: 0,
         }
 
+        setConversationList(conversations => {
+            return [newEntry].concat(conversations);
+        });
+
+        // update username set
+        usernameSet.current.add(receiver);
+
+        // enter conversation
         setReceiver(receiver);
-
-        // check if user in the list, and update conversation list
-        if (!usernameSet.current.has(receiver)) {
-
-            // fetch profile picture
-            const objectUrl = await fetchProfilePicture(receiver);
-
-            // insert new entry
-            const newEntry: Conversation = {
-                receiver: receiver,
-                profilePictureUrl: objectUrl,
-                latestMessage: "",
-                latestTimestamp: new Date().getTime(),   // TODO: save this timestamp to db
-                lastRead: new Date().getTime(),      // TODO: save this timestamp to db
-            }
-
-            setProfilePictureUrl(objectUrl);
-
-            setConversationList(conversations => {
-                return [newEntry].concat(conversations);
-            });
-
-            // update username set
-            usernameSet.current.add(receiver);
-        }
-        else {
-            setProfilePictureUrl(conversationList.filter(item => item.receiver == receiver)[0].profilePictureUrl);
-        }
+        setProfilePictureUrl(objectUrl);
     }
 
     const handleNewMessageEvent = async (message: NewMessageEvent) => {
-        // update latest message & timestamp
+        // update latest message & timestamp & unread count
         // update new conversation order
+        var receiver;
+
+        // hack: get new values
+        setReceiver(_receiver => {
+            receiver = _receiver;
+            return _receiver;
+        })
+
         if (message.sender == currentUserId) {
             // echo new message
             setConversationList(list => list.map((item, index) => {
@@ -163,7 +178,8 @@ function ChatLayout() {
                     ...item,
                     // update the target entry
                     latestMessage: item.receiver == message.receiver ? message.content : item.latestMessage,
-                    latestTimestamp: item.receiver == message.receiver ? message.timestamp : item.latestTimestamp
+                    latestTimestamp: item.receiver == message.receiver ? message.timestamp : item.latestTimestamp,
+                    unreadCount: item.unreadCount   // NO change
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
@@ -174,7 +190,10 @@ function ChatLayout() {
                     ...item,
                     // update the target entry
                     latestMessage: item.receiver == message.sender ? message.content : item.latestMessage,
-                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp
+                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp,
+                    // if active conversation, unreadCount <= 0
+                    // else, unreadCount++
+                    unreadCount: item.receiver == message.sender ? (message.sender == receiver ? 0 : item.unreadCount + 1) : item.unreadCount,
                 }
             }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
@@ -182,14 +201,30 @@ function ChatLayout() {
 
     const handleReadEvent = async (event: ReadEvent) => {
         // affect rendering of read flag in chatroom
-        setConversationList(list => list.map((item, index) => {
-            return {
-                ...item,
-                // update the target entry
-                // note: If read event's timestamp larger, override. Else, no change 
-                lastRead: item.receiver == event.sender && item.lastRead < event.timestamp ? event.timestamp : item.lastRead
-            }
-        }));
+
+        if (event.sender == currentUserId) {
+            // echo read event
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    // note: unreadCount = 0
+                    lastRead: item.lastRead,
+                    unreadCount: item.receiver == event.receiver ? 0 : item.unreadCount
+                }
+            }));
+        } else {
+            // others read event
+            setConversationList(list => list.map((item, index) => {
+                return {
+                    ...item,
+                    // update the target entry
+                    // note: If read event's timestamp larger, override. Else, no change 
+                    lastRead: item.receiver == event.sender && item.lastRead < event.timestamp ? event.timestamp : item.lastRead,
+                    unreadCount: item.unreadCount
+                }
+            }));
+        }
 
     }
 
@@ -232,7 +267,6 @@ function ChatLayout() {
             <Box sx={{
                 minWidth: "300px",
                 maxWidth: "300px",
-                overflow: "auto",
                 borderRight: "1px solid lightgrey",
             }}>
 
@@ -246,6 +280,7 @@ function ChatLayout() {
                         autoFocus={false}
                         label=""
                         placeholder="Search username"
+                        disabled={searchDisable}
                         onKeyDown={startNewChat}
                         autoComplete="off"
                         sx={{ "margin": "10px", borderColor: "red" }}
@@ -260,8 +295,12 @@ function ChatLayout() {
                         }}
                     />
                 </div>
-
-                <ConversationList receiver={receiver} conversationList={conversationList} conversationOnClick={ConversationOnClick} />
+                <Box sx={{
+                    overflow: "auto",
+                    height: "100%"
+                }}>
+                    <ConversationList receiver={receiver} conversationList={conversationList} conversationOnClick={ConversationOnClick} />
+                </Box>
             </Box>
 
             {/* chat contrainer */}

@@ -29,6 +29,10 @@ dependencies {
 
 	implementation 'org.apache.commons:commons-lang3:3.13.0'
 
+	// gRPC
+	implementation 'net.devh:grpc-spring-boot-starter:2.14.0.RELEASE'
+	implementation project(':grpc-lib')
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

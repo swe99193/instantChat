@@ -1,23 +1,28 @@
 package com.application.user_data;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserDataService {
     private final UserDataRepository userDataRepository;
@@ -26,11 +31,13 @@ public class UserDataService {
     private String bucketName;
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
     @Autowired
-    public UserDataService(UserDataRepository userDataRepository, S3Client s3Client) {
+    public UserDataService(UserDataRepository userDataRepository, S3Client s3Client, S3Presigner s3Presigner) {
         this.userDataRepository = userDataRepository;
         this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
     }
 
     public UserData getUserData(String username){
@@ -39,11 +46,11 @@ public class UserDataService {
 
 
     /**
-     * get profile picture
+     * Get profile picture url.
      */
-    public byte[] getProfilePicture(String username){
+    public String getProfilePictureUrl(String username){
         String objectName = userDataRepository.findById(username).get().getProfilePicture();
-        return getFile(objectName);
+        return getPresignedUrl(objectName);
     }
 
 
@@ -116,5 +123,28 @@ public class UserDataService {
                 .build();
 
         s3Client.deleteObject(deleteObjectRequest);
+    }
+
+    /**
+     * Get S3 temporary download url (Get Object).
+     */
+    // ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_Scenario_PresignedUrl_section.html
+    private String getPresignedUrl(String objectName) {
+
+        // get presigned url
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(objectName)
+                .build();
+
+        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofSeconds(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest);
+        String url = presignedGetObjectRequest.url().toString();
+        log.info("✅ presign url (GetObject): " + url);
+        return url;
     }
 }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "AccountServiceGrpcLib";
+option java_outer_classname = "AccountServiceProto";
+
+// Note: service name will be the prefix of the gRPC Bean
+service AccountService {
+  rpc checkUserExist (CheckUserExistRequest) returns (CheckUserExistResponse) {}
+}
+
+message CheckUserExistRequest {
+  string username = 1;
+}
+
+message CheckUserExistResponse {
+  bool exist = 1;
+}
