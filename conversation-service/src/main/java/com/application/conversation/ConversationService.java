@@ -58,6 +58,7 @@ public class ConversationService extends ConversationServiceGrpc.ConversationSer
             body.put("user1", conversation.user1);
             body.put("user2", conversation.user2);
             body.put("latestMessage", conversation.latestMessage);
+            body.put("latestTimestamp", conversation.latestTimestamp);
             body.put("lastReadUser1", conversation.lastReadUser1);
             body.put("lastReadUser2", conversation.lastReadUser2);
             body.put("unreadCount", response.getUnreadCount(index++));
