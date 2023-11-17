@@ -42,3 +42,7 @@ amazon:
 
 frontend:
     url: ${FRONTEND_URL}
+
+grpc:
+    server:
+        port: 9090
