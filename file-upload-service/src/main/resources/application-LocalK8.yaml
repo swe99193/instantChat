@@ -57,7 +57,7 @@ grpc:
             keepAliveWithoutCalls: true
             negotiationType: plaintext
         grpc-server-message: # gRPC server name
-            address: 'dns:///conversation-service:9090'
+            address: 'dns:///message-service:9090'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext
