@@ -261,14 +261,12 @@ public class MessageService extends MessageServiceGrpc.MessageServiceImplBase {
 
         String username = request.getUsername();
         List<GetUnreadCountQuery> queryList = request.getQueryList();
-        List<Integer> unreadCountList = new ArrayList<>();
 
-        for (GetUnreadCountQuery query : queryList) {
-            Integer count = getUnreadCount(query.getConversationId(), query.getTimestamp(), username);
-            unreadCountList.add(count);
-        }
+        // multithreading
+        // ref: https://www.baeldung.com/java-for-loop-parallel
+        List<Integer> results = queryList.parallelStream().map(query -> getUnreadCount(query.getConversationId(), query.getTimestamp(), username)).toList();
 
-        GetUnreadCountResponse response = GetUnreadCountResponse.newBuilder().addAllUnreadCount(unreadCountList).build();
+        GetUnreadCountResponse response = GetUnreadCountResponse.newBuilder().addAllUnreadCount(results).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
