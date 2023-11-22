@@ -136,6 +136,9 @@ function ChatLayout() {
             return;
         }
 
+        // update username set
+        usernameSet.current.add(receiver);
+
         const objectUrl = await fetchProfilePicture(receiver);
 
         // insert new entry
@@ -151,9 +154,6 @@ function ChatLayout() {
         setConversationList(conversations => {
             return [newEntry].concat(conversations);
         });
-
-        // update username set
-        usernameSet.current.add(receiver);
 
         // enter conversation
         setReceiver(receiver);
@@ -185,17 +185,45 @@ function ChatLayout() {
         }
         else {
             // receive new message 
-            setConversationList(list => list.map((item, index) => {
-                return {
-                    ...item,
-                    // update the target entry
-                    latestMessage: item.receiver == message.sender ? message.content : item.latestMessage,
-                    latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp,
-                    // if active conversation, unreadCount <= 0
-                    // else, unreadCount++
-                    unreadCount: item.receiver == message.sender ? (message.sender == receiver ? 0 : item.unreadCount + 1) : item.unreadCount,
-                }
-            }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
+
+            // new conversation
+            if (!usernameSet.current.has(message.sender)) {
+                // update username set
+                usernameSet.current.add(message.sender);
+                setConversationList(list => list.concat([{
+                    receiver: message.sender,
+                    profilePictureUrl: "",
+                    latestMessage: message.content,
+                    latestTimestamp: message.timestamp,
+                    lastRead: new Date().getTime(),
+                    unreadCount: 1,
+                }]).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
+
+
+                // fetch profile picture
+                const objectUrl = await fetchProfilePicture(message.sender);
+                setConversationList(list => list.map((item) => {
+                    return {
+                        ...item,
+                        // update the target entry
+                        profilePictureUrl: item.receiver == message.sender ? objectUrl : item.profilePictureUrl,
+                    };
+                }));
+
+            }
+
+            else
+                setConversationList(list => list.map((item, index) => {
+                    return {
+                        ...item,
+                        // update the target entry
+                        latestMessage: item.receiver == message.sender ? message.content : item.latestMessage,
+                        latestTimestamp: item.receiver == message.sender ? message.timestamp : item.latestTimestamp,
+                        // if active conversation, unreadCount <= 0
+                        // else, unreadCount++
+                        unreadCount: item.receiver == message.sender ? (message.sender == receiver ? 0 : item.unreadCount + 1) : item.unreadCount,
+                    }
+                }).sort((a, b) => { return b.latestTimestamp - a.latestTimestamp }));
         }
     }
 
