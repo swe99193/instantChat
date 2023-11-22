@@ -21,6 +21,10 @@ spring:
             host: ${REDIS_URL}
             port: 6379
 
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        consumer.group-id: ${random.long}
+
 server:
     port: 8080
 
@@ -33,11 +37,13 @@ frontend:
 grpc:
     server:
         port: 9090
+
+    client:
         # microservices
         # find gRPC server by dns
         # ref: https://yidongnan.github.io/grpc-spring-boot-starter/en/client/configuration.html
         grpc-server-message: # gRPC server name
-            address: 'dns:///conversation-service:9090'
+            address: 'dns:///message-service:9090'
             enableKeepAlive: true
             keepAliveWithoutCalls: true
             negotiationType: plaintext

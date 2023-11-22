@@ -19,6 +19,10 @@ spring:
             max-file-size: 100MB
             max-request-size: 100MB
 
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        consumer.group-id: ${random.long}
+
 server:
     port: 8080
 

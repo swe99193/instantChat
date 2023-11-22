@@ -19,20 +19,16 @@ spring:
             max-file-size: 100MB
             max-request-size: 100MB
 
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        consumer.group-id: ${random.long}
+
 server:
     port: 8080
 
     servlet:
         session:
             timeout: 360000  # session timeout, 100 hrs
-
-amazon:
-    aws:
-        accesskey: ${AWS_ACCESS_KEY}
-        secretkey: ${AWS_SECRET_KEY}
-
-    s3:
-        bucketname: ${S3_BUCKET_NAME}
 
 #rabbitmq:   # AWS (switch to ActiveMQ)
 #    host: ${MQ_HOST}
