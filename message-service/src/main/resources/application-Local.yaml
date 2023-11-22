@@ -18,8 +18,8 @@ spring:
             max-request-size: 100MB
 
     kafka:
-        bootstrap-servers: localhost:9095
-        consumer.group-id: group-a
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        consumer.group-id: ${random.long}
 
 server:
     port: 8082
