@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import Stomp from 'stompjs';
+import { Client, StompSubscription } from '@stomp/stompjs';
 
 // redux
 import { useAppSelector } from './redux/hooks';
@@ -37,7 +37,7 @@ function ChatLayout() {
     const [receiver, setReceiver] = useState("");   // receiver of active conversation
     const [profilePictureUrl, setProfilePictureUrl] = useState(""); // object url of active conversation, passed to children components
 
-    const stompClient = useRef<Stomp.Client>(Stomp.client(`${WEBSOCKET_ENDPOINT}`));
+    const stompClient = useRef(new Client({ brokerURL: `${WEBSOCKET_ENDPOINT}` }));
     const [isConnected, setIsConnected] = useState(false); // whether the Stomp client has established connection
     const [searchDisable, setSearchDisable] = useState(true); // disable search until conversation list is rendered
 
@@ -260,22 +260,39 @@ function ChatLayout() {
     useEffect(() => {
         fetchConversation();
 
-        var newMessageSub: Stomp.Subscription;
-        var readSub: Stomp.Subscription;
+        var newMessageSub: StompSubscription;
+        var readSub: StompSubscription;
 
-        stompClient.current.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
+        stompClient.current.reconnectDelay = 1;
+        stompClient.current.heartbeatIncoming = 1000;
+        stompClient.current.heartbeatOutgoing = 1000;
+        stompClient.current.activate();
+        stompClient.current.onDisconnect = (frame) => {
+            console.log("😵 stomp client disconnected");
+            console.log(frame);
+        };
+
+        stompClient.current.onWebSocketClose = (frame) => {
+            console.log("😵 websocket closed");
+            console.log(frame);
+        };
+
+        stompClient.current.onConnect = (frame) => {
+            console.log("✅ stomp client connected");
+
             setIsConnected(true);
 
             newMessageSub = stompClient.current.subscribe(`/user/queue/global.newmessage`, function (message) {
+                console.log("new message event: " + message.body);
                 handleNewMessageEvent(JSON.parse(message.body));
             });
 
             readSub = stompClient.current.subscribe(`/user/queue/global.read`, function (message) {
+                console.log("read event: " + message.body);
                 handleReadEvent(JSON.parse(message.body));
             });
 
-        });
+        };
 
         return function cleanup() {
             // unsubscribe from queue

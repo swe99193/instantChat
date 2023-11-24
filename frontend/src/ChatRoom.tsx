@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAppSelector } from './redux/hooks';
-import Stomp from 'stompjs';
+import { Client } from '@stomp/stompjs';
 
 // mui
 import { AppBar, Avatar, Box, CircularProgress, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
@@ -39,7 +39,7 @@ const pageSize = 20;
 type LayoutState = "init" | "send" | "receive" | "normal";
 
 interface props {
-    stompClient: Stomp.Client;
+    stompClient: Client;
     receiver: string;
     profilePictureUrl: string;
     lastRead: number;
@@ -172,7 +172,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         }, ...messages]);
 
         setLayoutState("send");
-        stompClient.send(`/app/event/read/${receiver}`, {});
+        stompClient.publish({ destination: `/app/event/read/${receiver}` });
     };
 
 
@@ -192,7 +192,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         setLayoutState("receive");
 
         // publish "read" event
-        stompClient.send(`/app/event/read/${receiver}`, {});
+        stompClient.publish({ destination: `/app/event/read/${receiver}` });
     };
 
 
@@ -372,12 +372,14 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
     const subscribeQueue = () => {
 
         const receiveSub = stompClient.subscribe(`/user/queue/private.${receiver}`, function (message) {
+            console.log("receive: " + message.body);
             handleReceive(JSON.parse(message.body));
-        }, { "auto-delete": true });
+        });
 
         const echoSub = stompClient.subscribe(`/user/queue/private.echo.${receiver}`, function (message) {
+            console.log("echo: " + message.body);
             handleSendEcho(JSON.parse(message.body));
-        }, { "auto-delete": true });
+        });
 
         return { receiveSub, echoSub };
     }
@@ -439,7 +441,7 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         const { receiveSub, echoSub } = subscribeQueue();
 
         // publish "read" event
-        stompClient.send(`/app/event/read/${receiver}`, {});
+        stompClient.publish({ destination: `/app/event/read/${receiver}` });
 
         return function cleanup() {
             // unsubscribe from queue
