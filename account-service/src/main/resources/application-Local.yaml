@@ -16,8 +16,12 @@ spring:
             namespace: spring:session
     data:
         redis:
-            host: localhost # local
-            port: 6379
+            # cluster
+            cluster.nodes: ${REDIS_URL}
+
+            # single-node
+#            host: ${REDIS_URL}
+#            port: 6379
 
 server:
     port: 8084
