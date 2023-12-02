@@ -1,0 +1,458 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: account-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: account-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: account-app
+    spec:
+      containers:
+        - name: account-app
+          image: swe99193/account-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: chat-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chat-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: chat-app
+    spec:
+      containers:
+        - name: chat-app
+          image: swe99193/chat-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: KAFKA_BOOTSTRAP_SERVERS
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conversation-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: conversation-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: conversation-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: conversation-app
+    spec:
+      containers:
+        - name: conversation-app
+          image: swe99193/conversation-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: PG_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_USERNAME
+          - name: PG_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_PASSWORD
+          - name: PG_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: PG_URL
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: KAFKA_BOOTSTRAP_SERVERS
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: message-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: message-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: message-app
+    spec:
+      containers:
+        - name: message-app
+          image: swe99193/message-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: KAFKA_BOOTSTRAP_SERVERS
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-upload-deployment
+  namespace: default # specify namespace
+  labels:   
+    app: file-upload-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: file-upload-app
+  template:
+    metadata:
+      namespace: default # specify namespace
+      labels:   # note: used by Service spec.selector
+        app: file-upload-app
+    spec:
+      containers:
+        - name: file-upload-app
+          image: swe99193/file-upload-service:latest
+          ports:
+          - containerPort: 8080
+          env:
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_ACCESS_KEY
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: AWS_SECRET_KEY
+          - name: S3_BUCKET_NAME
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: S3_BUCKET_NAME
+          - name: REDIS_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: REDIS_URL
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: KAFKA_BOOTSTRAP_SERVERS
+          - name: FRONTEND_URL
+            valueFrom:
+              secretKeyRef:
+                name: instantchat-secret
+                key: FRONTEND_URL
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: account-service
+  namespace: default
+spec:
+  selector:
+    app: account-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+      # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: chat-service
+  namespace: default
+spec:
+  selector:
+    app: chat-app
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      targetPort: 8080
+      port: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: conversation-service
+  namespace: default
+spec:
+  selector:
+    app: conversation-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: message-service
+  namespace: default
+spec:
+  selector:
+    app: message-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: file-upload-service
+  namespace: default
+spec:
+  selector:
+    app: file-upload-app
+  type: ClusterIP
+  ports:
+    - name: http-service-port
+      protocol: TCP
+      targetPort: 8080
+      port: 8080
+    # gRPC
+    - name: grpc-service-port
+      protocol: TCP
+      targetPort: 9090
+      port: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: instantchat-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80} , {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:111111222222:certificate/d8944632-a196-465f-be2a-843bf80f5485  # replace with your certificate
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  rules:
+    - http:
+        paths:
+        # Microservices
+          - pathType: Prefix
+            path: /auth
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /login
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /logout
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /user
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /register
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /accountrecovery
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /user-data
+            backend:
+              service:
+                name: account-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /chat
+            backend:
+              service:
+                name: chat-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /conversation
+            backend:
+              service:
+                name: conversation-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /filestorage
+            backend:
+              service:
+                name: file-upload-service
+                port:
+                  number: 8080
+          - pathType: Prefix
+            path: /message
+            backend:
+              service:
+                name: message-service
+                port:
+                  number: 8080
