@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAppSelector } from './redux/hooks';
-import { Client } from '@stomp/stompjs';
+import { ActivationState, Client } from '@stomp/stompjs';
 
 // mui
 import { AppBar, Avatar, Box, CircularProgress, IconButton, List, Skeleton, TextField, Toolbar, Typography } from '@mui/material';
@@ -43,6 +43,8 @@ interface props {
     receiver: string;
     profilePictureUrl: string;
     lastRead: number;
+    /** Whether stomp client is connected */
+    stompClientConnected: boolean;
 }
 
 /**
@@ -79,7 +81,7 @@ function objectNameToFilename(objectName: string) {
     return (objectName).split("/").slice(2).join().split("_").slice(1).join();
 }
 
-function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props) {
+function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead, stompClientConnected }: props) {
     const [messageInput, setMessageInput] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);    // from newest to earliest
     const [layoutState, setLayoutState] = useState<LayoutState>("init"); //  controll initial rendering & scroll adjusment
@@ -438,21 +440,33 @@ function ChatRoom({ stompClient, receiver, profilePictureUrl, lastRead }: props)
         getStatusMessage(receiver);
         initFetchMessage(receiver, Number.MAX_SAFE_INTEGER, pageSize);
         setfetchSet(new Set());
-        const { receiveSub, echoSub } = subscribeQueue();
-
-        // publish "read" event
-        stompClient.publish({ destination: `/app/event/read/${receiver}` });
 
         return function cleanup() {
-            // unsubscribe from queue
-            receiveSub.unsubscribe();
-            echoSub.unsubscribe();
-
             // abort targeted fetch requests
             fetchAbortController.abort();
         }
 
     }, [receiver]); // re-render when receiver change
+
+
+    /** Handle subscription */
+    useEffect(() => {
+        // When reconnected, recover subscription
+        if (stompClientConnected) {
+            console.log("✅ subscribe");
+
+            const { receiveSub, echoSub } = subscribeQueue();
+
+            // publish "read" event
+            stompClient.publish({ destination: `/app/event/read/${receiver}` });
+
+            return function cleanup() {
+                // unsubscribe from queue
+                receiveSub.unsubscribe();
+                echoSub.unsubscribe();
+            }
+        }
+    }, [receiver, stompClientConnected]);
 
 
     // see useLayoutEffect: https://react.dev/reference/react/useLayoutEffect

@@ -275,6 +275,7 @@ function ChatLayout() {
         stompClient.current.onWebSocketClose = (frame) => {
             console.log("😵 websocket closed");
             console.log(frame);
+            setIsConnected(false);
         };
 
         stompClient.current.onConnect = (frame) => {
@@ -349,7 +350,7 @@ function ChatLayout() {
             </Box>
 
             {/* chat contrainer */}
-            {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} profilePictureUrl={profilePictureUrl} lastRead={conversationList.find(item => item.receiver == receiver).lastRead} /> : <></>}
+            {receiver ? <ChatRoom stompClient={stompClient.current} receiver={receiver} profilePictureUrl={profilePictureUrl} lastRead={conversationList.find(item => item.receiver == receiver).lastRead} stompClientConnected={isConnected} /> : <></>}
         </div>
     );
 }
