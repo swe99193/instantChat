@@ -123,7 +123,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 
 	@Override
 	protected void configureStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/chat/websocket").setAllowedOrigins(frontendUrl);
+		registry.addEndpoint("/chat/websocket").setAllowedOrigins(frontendUrl, "https://localhost:3000", "http://localhost:3000");
 	}
 
 	@Override
