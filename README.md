@@ -5,8 +5,7 @@ A chat application based on a microservice architecture and deployed with Kubern
 ## Features
 ### Available
 * Message pagination
-* Real-time and multiple-device update of read flag
-* Real-time and multiple-device update of unread count (not 100% synchornized if network goes offline)
+* Real-time and multiple-device update of read flag, latest message, and unread count
 * Websocket client auto reconnection upon disconnection or network failure
 * File uploads such as pdf, jpg, zip, etc.
 * Image display as dialog
@@ -21,32 +20,36 @@ A chat application based on a microservice architecture and deployed with Kubern
 
 
 ## Demo
-### basic layout
-(screenshot)
+### web pages
+#### basic layout
+![image](/docs/images/base-layout.png)
+
+#### login
+![image](/docs/images/login.png)
+
+#### misc (set status, profile pic, password etc)
+![image](/docs/images/misc.gif)
 
 ### message pagination
-![InstantChat-pagination.gif](/docs/images/InstantChat-pagination.gif)
+![image](/docs/images/message-pagination.gif)
+
+### switch chatroom with the side bar
+![image](/docs/images/conversation.gif)
 
 ### send/recieve messages
-(screenshot)
+![image](/docs/images/text-message.gif)
 
 ### send/recieve images and files
-(screenshot)
+![image](/docs/images/file-message.gif)
 
-### read flag & unread count
-(screenshot)
+### multi-device updates of read flag
+![image](/docs/images/read-flag.gif)
 
-### multi-device updates
-(screenshot)
+### multi-device updates of latest message & unread count
+![image](/docs/images/unread-count.gif)
 
 ### start a new conversation
-(screenshot)
-
-### login
-(screenshot)
-
-### misc (set status, profile pic, password etc)
-(screenshot)
+![image](/docs/images/new-conversation.gif)
 
 
 ## Structure
@@ -101,8 +104,8 @@ All AWS resources are operated at `us-east-1` as an example.
 4. (optional) Set public access to allow connection to RDS from outside VPC. Only required for local development. 
 
 ### DynamoDB
-1. Set partition key and sort key
-![message pagination](/docs/images/DynamoDB-config.png)
+1. Set partition key and sort key  
+    ![message pagination](/docs/images/DynamoDB-config.png)
 
 2. Access DynamoDB with AWS SDK. 
 
@@ -192,14 +195,14 @@ Requirements:
 
     ![CloudFront-config.png](/docs/images/CloudFront-config.png)
 
-2. Define default root object as index.html
+2. Define default root object as index.html  
     ![CloudFront-default-root-object.png](/docs/images/CloudFront-default-root-object.png)
 
 
 3. Update permissions in S3.   
     Refer to [Giving the origin access control permission to access the S3 bucket](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#oac-permission-to-access-s3)
 
-4. Create custom error response to direct all paths to `index.html`. 
+4. Create custom error response to direct all paths to `index.html`.  
     ![CloudFront-custtom-error-response.png](/docs/images/CloudFront-custtom-error-response.png)
 
 
@@ -239,7 +242,7 @@ kubernetes.io/role/elb          1
 Configure TLS certificates to allow https connection (`Ingress`)  
 ref: https://repost.aws/knowledge-center/eks-apps-tls-to-activate-https
 
-Tips: Create a self-signed certificate with the domain of ELB (e.g., *k8s-default-instantc-xxxxxxx-xxxxxxx.us-east-1.elb.amazonaws.com*) and import to AWS Certificate Manager. 
+Tips: Create a self-signed certificate with the domain of ELB (e.g., *k8s-default-instantc-xxxxxxx-xxxxxxx.us-east-1.elb.amazonaws.com*) and import to AWS Certificate Manager.   
 ![Self-Signed-Certificates.png](/docs/images/Self-Signed-Certificates.png)
 
 
@@ -349,3 +352,8 @@ Restart deployment
 kubectl rollout restart deployment
 kubectl rollout restart deployment account-deployment
 ```
+
+
+<style>
+    img { width: 50%; }
+</style>
