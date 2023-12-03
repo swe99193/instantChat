@@ -15,6 +15,7 @@ A chat application based on a microservice architecture and deployed with Kubern
 ### Possible extensions
 * Support online status
 * Support conversation pagination
+* Image compression for faster UI rendering
 * Route Kafka pub/sub messsages to websocket servers that a receiver is connected to
 * Support video display
 
@@ -63,6 +64,71 @@ A chat application based on a microservice architecture and deployed with Kubern
 * S3 (AWS): storage for images, files, profile pictures
 
 
+## Infrastructure setup on AWS (Sample)
+All AWS resources are operated at `us-east-1` as an example. 
+
+### Redis
+1. Create a Redis cluster **in the same VPC** of your EKS cluster
+
+2. Find the connection endpoint at Configuration Endpoint. Set the value in the `Secrets.yaml`.  
+    https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Endpoints.html
+    
+    ![Redis-cluster-config.png](/docs/images/Redis-cluster-config.png)
+
+3. Configure **Security Group** of the redis cluster to allow EKS nodes to connect to the redis cluster
+
+    Refer to [Authorize access to the cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/GettingStarted.AuthorizeAccess.html)
+
+4. (optional) Set up connection to Redis cluster from outside VPC. Only required for local development.  
+    https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/accessing-elasticache.html#access-from-outside-aws
+
+
+### Kafka
+1. Create a Kafka cluster **in the same VPC** of your EKS cluster.  
+
+2. Configure **Security Group** of the Kafka cluster to allow EKS nodes to connect to the Kafka cluster. For example, allow inbound traffic from the security group of EKS nodes. 
+
+3. Find Kafka bootstrap servers. Set the value in the `Secrets.yaml`.
+
+   ![kafka-cluster-config.png](/docs/images/kafka-cluster-config.png)
+
+4. (optional) Set up connection to Kafka cluster from outside VPC. Only required for local development. 
+
+### PostgreSQL
+1. Create a PostgreSQL database on AWS RDS. 
+2. Configure **Security Group** of the database to allow EKS nodes to connect to the database.
+3. Find connection endpoint. Set the value in the `Secrets.yaml`.
+4. (optional) Set public access to allow connection to RDS from outside VPC. Only required for local development. 
+
+### DynamoDB
+1. Set partition key and sort key
+![message pagination](/docs/images/DynamoDB-config.png)
+
+2. Access DynamoDB with AWS SDK. 
+
+### S3
+1. Open a S3 bucket. Set the bucket name in the `Secrets.yaml`.
+2. Upload default profile pictures in `s3/profile-picture/default/` to S3 bucket under `/profile-picture/default/`
+3. Add CORS configuration to your bucket to allow presigned url. For example:
+```
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "GET",
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": []
+    }
+]
+```
+4. Access S3 with AWS SDK. 
+
+
 ## Build Project
 Requirements:
 * Node v16.16.0
@@ -76,7 +142,7 @@ npm run build
 ```
 
 ### Backend
-Build Docker image for each microservices (Java)
+Build Docker image for each microservice (Java)
 ```
 cd account-service
 ./gradlew build
@@ -111,8 +177,8 @@ docker push swe99193/message-service
 
 ## Cloud setup
 Expected results:
-* Access frontend at `https://d1kqmv9mmy5u7j.cloudfront.net` (example)
-* Access backend at `http://k8s-default-instantc-7d687aa992-1714336368.us-east-1.elb.amazonaws.com/` (example)
+* Access frontend at `https://xxxxxxxxx.cloudfront.net` (example)
+* Access backend at `http://k8s-default-instantc-xxxxxx-xxxxxx.us-east-1.elb.amazonaws.com/` (example)
 
 
 ### Frontend
@@ -148,7 +214,7 @@ Requirements:
 #### Setup
 Create a new EKS cluster using public subnets in the default VPC
 ```
-eksctl create cluster --name your-cluster --region us-east-1 --vpc-public-subnets subnet-0d036e08952b71b71,subnet-04bc8402e4396ead8
+eksctl create cluster --name your-cluster --region us-east-1 --vpc-public-subnets subnet-xxxxxxxxxxxxxxxxx,subnet-xxxxxxxxxxxxxxxxx
 ```
 
 ❗️Check if these add-ons are installed: Amazon VPC CNI, CoreDNS, kube-proxy
@@ -181,7 +247,7 @@ Tips: Create a self-signed certificate with the domain of ELB (e.g., *k8s-defaul
 
 Create your secrets `k8/Secrets.yaml` (refer to `Secrets-sample.yaml`) 
 ```
-FRONTEND_URL=https://d1kqmv9mmy5u7j.cloudfront.net    # configure CORS
+FRONTEND_URL=https://xxxxxxx.cloudfront.net    # configure CORS
 ```
 
 Create the resources with yaml files
@@ -265,65 +331,6 @@ kubectl apply -f k8/Microservices-minikube.yaml
 Delete minikube cluster
 ```
 minikube delete
-```
-
-
-## Infrastructure setup on AWS (Sample)
-### Redis
-1. Create a Redis cluster **in the same VPC** of your EKS cluster
-
-2. Find the connection endpoint at Configuration Endpoint. Set the value in the `Secrets.yaml`.  
-    https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Endpoints.html
-    
-    ![Redis-cluster-config.png](/docs/images/Redis-cluster-config.png)
-
-3. Configure **Security Group** of the redis cluster to allow EKS nodes to connect to the redis cluster
-
-    Refer to [Authorize access to the cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/GettingStarted.AuthorizeAccess.html)
-
-4. (optional) Set up connection to Redis cluster outside VPC. Only required for local development  
-    https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/accessing-elasticache.html#access-from-outside-aws
-
-
-### Kafka
-1. Create a Kafka cluster **in the same VPC** of your EKS cluster.  
-
-2. Configure **Security Group** of the Kafka cluster to allow EKS nodes to connect to the Kafka cluster. For example, allow inbound traffic from the security group of EKS nodes. 
-
-3. Find Kafka bootstrap servers. Set the value in the `Secrets.yaml`.
-
-   ![kafka-cluster-config.png](/docs/images/kafka-cluster-config.png)
-
-
-### PostgreSQL
-1. Set up with public ip
-2. Find connection endpoint. Set the value in the `Secrets.yaml`.
-
-
-### DynamoDB
-1. Set partition key and sort key
-![message pagination](/docs/images/DynamoDB-config.png)
-
-
-### S3
-1. Open a S3 bucket. Set the bucket name in the `Secrets.yaml`.
-2. Upload default profile pictures in `s3/profile-picture/default/` to S3 bucket under `/profile-picture/default/`
-3. Add CORS configuration to your bucket to allow presigned url. For example:
-```
-[
-    {
-        "AllowedHeaders": [
-            "*"
-        ],
-        "AllowedMethods": [
-            "GET",
-        ],
-        "AllowedOrigins": [
-            "*"
-        ],
-        "ExposeHeaders": []
-    }
-]
 ```
 
 

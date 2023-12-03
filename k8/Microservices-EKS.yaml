@@ -372,7 +372,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80} , {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:111111222222:certificate/d8944632-a196-465f-be2a-843bf80f5485  # replace with your certificate
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:xxxxxxxxxxxx:certificate/xxxxx-certificate_id-xxxxx  # replace with your certificate
     alb.ingress.kubernetes.io/ssl-redirect: '443'
 spec:
   rules:
