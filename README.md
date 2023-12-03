@@ -352,8 +352,3 @@ Restart deployment
 kubectl rollout restart deployment
 kubectl rollout restart deployment account-deployment
 ```
-
-
-<style>
-    img { width: 50%; }
-</style>
