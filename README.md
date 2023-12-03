@@ -33,6 +33,9 @@ A chat application based on a microservice architecture and deployed with Kubern
 ### message pagination
 ![image](/docs/images/message-pagination.gif)
 
+### image view & download files
+![image](/docs/images/image-view.gif)
+
 ### switch chatroom with the side bar
 ![image](/docs/images/conversation.gif)
 
