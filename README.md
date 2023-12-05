@@ -3,9 +3,10 @@
 A chat application based on a microservice architecture and deployed with Kubernetes (AWS EKS). 
 
 ## Features
-### Available
+### Available features
 * Message pagination
 * Real-time and multiple-device update of read flag, latest message, and unread count
+* Side bar rendering conversations sorted by timestamp and updated in real-time
 * Websocket client auto reconnection upon disconnection or network failure
 * File uploads such as pdf, jpg, zip, etc.
 * Image display as dialog
