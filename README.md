@@ -1,11 +1,12 @@
 # InstantChat
 
-A chat application based on a microservice architecture and deployed with Kubernetes (AWS EKS). 
+A chat application based on a microservice architecture, with an interface built with Material UI and backend services deployed with Kubernetes (AWS EKS). 
 
 ## Features
 ### Available features
 * Message pagination
-* Real-time and multiple-device update of read flag, latest message, and unread count
+* Real-time and multiple-device update of read flag, latest message, and unread count  
+    (not auto synced if the network goes offline)
 * Side bar rendering conversations sorted by timestamp and updated in real-time
 * Websocket client auto reconnection upon disconnection or network failure
 * File uploads such as pdf, jpg, zip, etc.
@@ -18,6 +19,27 @@ A chat application based on a microservice architecture and deployed with Kubern
 * Image compression for faster UI rendering
 * Route Kafka pub/sub messsages to websocket servers that a receiver is connected to
 * Support video display
+
+
+## Structure
+### Microservices
+* `account-service`: account registration, recovery, login, logout, profile-picture, metadata
+* `chat-service`: manage websockets connection, consume Kafka events and route to websockets
+* `conversation-service`: create/list conversations, update latest messages & read timestamps of conversations
+* `file-upload-service`: file upload
+* `message-service`: save/list messages, generate S3 presigned url, query unread counts
+
+### Tools
+* [grpc-spring](https://github.com/grpc-ecosystem/grpc-spring) for microservice communication
+* Backend services run on [Amazon Elastic Kubernetes Service](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
+* Frontend built with [Material UI](https://mui.com/)
+
+### Infrastructure
+* Redis: login session
+* Kafka: pub/sub system
+* PostgreSQL: storage for user accounts, user metadata, and conversation metadata
+* DynamoDB (AWS): storage for messages
+* S3 (AWS): storage for images, files, and profile pictures
 
 
 ## Demo
@@ -54,21 +76,6 @@ A chat application based on a microservice architecture and deployed with Kubern
 
 ### start a new conversation
 ![image](/docs/images/new-conversation.gif)
-
-
-## Structure
-### Microservices
-* `account-service`: account registration, recovery, login, logout, profile-picture, metadata
-* `chat-service`: manage websockets connection, consume Kafka events and route to websockets
-* `conversation-service`: create/list conversations, handle new message & read event of conversations
-* `file-upload-service`: file upload
-* `message-service`: save/list messages, generate S3 presigned url, query unread counts
-### Infrastructure
-* Redis: login session
-* Kafka: pub/sub system
-* PostgreSQL: storage for user accounts, user metadata, conversation metadata
-* DynamoDB (AWS): storage for messages
-* S3 (AWS): storage for images, files, profile pictures
 
 
 ## Infrastructure setup on AWS (Sample)
